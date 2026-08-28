@@ -7,6 +7,7 @@ import TransactionForm from './components/TransactionForm';
 import AnalyticsCharts from './components/AnalyticsCharts';
 import BudgetProgress from './components/BudgetProgress';
 import EmptyState from './components/EmptyState';
+import InstallPrompt from './components/InstallPrompt';
 import { useStore } from './store/useStore';
 
 type Tab = 'dashboard' | 'transactions' | 'analytics' | 'budget';
@@ -167,6 +168,8 @@ export default function App() {
       {showTransactionForm && (
         <TransactionForm onClose={() => setShowTransactionForm(false)} />
       )}
+
+      <InstallPrompt />
     </div>
   );
 }
