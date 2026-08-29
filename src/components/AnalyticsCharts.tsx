@@ -48,6 +48,23 @@ export default function AnalyticsCharts() {
     return null;
   };
 
+  const BarChartTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+          <p className="text-sm font-medium text-gray-900 mb-2">{label}</p>
+          {payload.map((entry) => (
+            <div key={entry.name} className="flex items-center justify-between gap-4 text-sm">
+              <span className="text-gray-600">{entry.name === 'income' ? 'Income' : 'Expenses'}:</span>
+              <span className="font-bold" style={{ color: entry.color }}>₹{entry.value.toLocaleString('en-IN')}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div className="card">
@@ -97,7 +114,7 @@ export default function AnalyticsCharts() {
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="month" stroke="#64748b" />
               <YAxis stroke="#64748b" />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<BarChartTooltip />} />
               <Bar dataKey="income" fill="#10b981" radius={[4, 4, 0, 0]} />
               <Bar dataKey="expenses" fill="#ef4444" radius={[4, 4, 0, 0]} />
             </BarChart>

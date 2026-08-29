@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Filter, Download, FileText } from 'lucide-react';
+import { Search, Filter, Download, FileText, Plus } from 'lucide-react';
 import { useStore, CATEGORIES } from '../store/useStore';
 import TransactionItem from './TransactionItem';
 import TransactionForm from './TransactionForm';
@@ -15,10 +15,10 @@ export default function TransactionList() {
   const filteredTransactions = transactions.filter((t) => {
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
-      return (
+      const matchesSearch = 
         t.note?.toLowerCase().includes(searchLower) ||
-        t.category.toLowerCase().includes(searchLower)
-      );
+        t.category.toLowerCase().includes(searchLower);
+      if (!matchesSearch) return false;
     }
     if (filters.type !== 'all' && t.type !== filters.type) return false;
     if (filters.category !== 'all' && t.category !== filters.category) return false;
@@ -47,19 +47,23 @@ export default function TransactionList() {
 
   return (
     <div className="space-y-4">
+      {/* Top Controls Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
+        {/* Search Field */}
         <div className="relative flex-1">
-  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
-  <input
-    type="text"
-    value={filters.search}
-    onChange={(e) => setFilters({ search: e.target.value })}
-    placeholder="Search transactions..."
-    className="input !pl-10"
-  />
-</div>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
+          <input
+            type="text"
+            value={filters.search}
+            onChange={(e) => setFilters({ search: e.target.value })}
+            placeholder="Search transactions..."
+            className="input !pl-10"
+          />
+        </div>
         
+        {/* Action Buttons */}
         <div className="flex gap-2">
+          {/* Filter Toggle */}
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`btn ${showFilters ? 'btn-primary' : 'btn-ghost'} px-4`}
@@ -68,6 +72,7 @@ export default function TransactionList() {
             Filters
           </button>
           
+          {/* Export Menu */}
           <div className="relative">
             <button
               onClick={() => setShowExport(!showExport)}
@@ -96,28 +101,34 @@ export default function TransactionList() {
             )}
           </div>
 
+          {/* Add Button */}
           <button onClick={() => setShowForm(true)} className="btn btn-primary px-4">
-            <Download className="w-4 h-4" />
+            <Plus className="w-4 h-4" />
             Add
           </button>
         </div>
       </div>
 
+      {/* Expandable Filter Panel */}
       {showFilters && (
         <div className="card p-4 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-gray-900">Filters</h3>
-            <button onClick={resetFilters} className="text-sm text-indigo-600 hover:text-indigo-700">
+            <button onClick={resetFilters} className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
               Reset
             </button>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Type Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
               <select
                 value={filters.type}
-                onChange={(e) => setFilters({ type: e.target.value as 'all' | 'income' | 'expense' })}
+                onChange={(e) => {
+                  const newType = e.target.value as 'all' | 'income' | 'expense';
+                  setFilters({ type: newType, category: 'all' });
+                }}
                 className="select"
               >
                 <option value="all">All</option>
@@ -126,6 +137,7 @@ export default function TransactionList() {
               </select>
             </div>
             
+            {/* Dynamic Category Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
               <select
@@ -133,13 +145,41 @@ export default function TransactionList() {
                 onChange={(e) => setFilters({ category: e.target.value })}
                 className="select"
               >
-                <option value="all">All</option>
-                {CATEGORIES.expense.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
+                <option value="all">All Categories</option>
+                
+                {/* Show Income categories if Type is 'income' */}
+                {(filters.type === 'income' || filters.type === 'all') && (
+                  filters.type === 'all' ? (
+                    <optgroup label="Income">
+                      {CATEGORIES.income.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </optgroup>
+                  ) : (
+                    CATEGORIES.income.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))
+                  )
+                )}
+
+                {/* Show Expense categories if Type is 'expense' */}
+                {(filters.type === 'expense' || filters.type === 'all') && (
+                  filters.type === 'all' ? (
+                    <optgroup label="Expense">
+                      {CATEGORIES.expense.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </optgroup>
+                  ) : (
+                    CATEGORIES.expense.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))
+                  )
+                )}
               </select>
             </div>
             
+            {/* Date Range Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
               <div className="flex gap-2">
@@ -161,6 +201,7 @@ export default function TransactionList() {
         </div>
       )}
 
+      {/* Transactions List */}
       <div className="space-y-3">
         {filteredTransactions.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
@@ -179,6 +220,7 @@ export default function TransactionList() {
         )}
       </div>
 
+      {/* Form Modal */}
       {showForm && (
         <TransactionForm
           onClose={handleCloseForm}

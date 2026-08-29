@@ -54,7 +54,7 @@ export default function TransactionItem({ transaction, onEdit, onDelete }: Trans
       <div className="relative">
         <button
           onClick={() => setShowActions(!showActions)}
-          className="p-2 hover:bg-gray-100 rounded-xl transition-colors opacity-0 group-hover:opacity-100"
+          className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
         >
           <MoreVertical className="w-4 h-4 text-gray-400" />
         </button>
