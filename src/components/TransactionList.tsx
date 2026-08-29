@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Search, Filter, Download } from 'lucide-react';
+import { Search, Filter, Download, FileText } from 'lucide-react';
 import { useStore, CATEGORIES } from '../store/useStore';
 import TransactionItem from './TransactionItem';
 import TransactionForm from './TransactionForm';
 import type { Transaction } from '../store/types';
 
 export default function TransactionList() {
-  const { transactions, filters, setFilters, resetFilters, deleteTransaction, exportToCSV, exportToJSON } = useStore();
+  const { transactions, filters, setFilters, resetFilters, deleteTransaction, exportToCSV, exportToJSON, exportToPDF } = useStore();
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -49,15 +49,15 @@ export default function TransactionList() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            value={filters.search}
-            onChange={(e) => setFilters({ search: e.target.value })}
-            placeholder="Search transactions..."
-            className="input pl-10"
-          />
-        </div>
+  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" />
+  <input
+    type="text"
+    value={filters.search}
+    onChange={(e) => setFilters({ search: e.target.value })}
+    placeholder="Search transactions..."
+    className="input !pl-10"
+  />
+</div>
         
         <div className="flex gap-2">
           <button
@@ -86,6 +86,10 @@ export default function TransactionList() {
                   </button>
                   <button onClick={() => { exportToJSON(); setShowExport(false); }} className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
                     Export as JSON
+                  </button>
+                  <button onClick={() => { exportToPDF(); setShowExport(false); }} className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    Export as PDF
                   </button>
                 </div>
               </>

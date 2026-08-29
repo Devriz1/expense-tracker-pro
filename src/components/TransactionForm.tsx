@@ -108,16 +108,16 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Amount</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">₹</span>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                className="input pl-8"
-                placeholder="0.00"
-              />
-            </div>
+  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10 pointer-events-none">₹</span>
+  <input
+    type="number"
+    step="0.01"
+    value={formData.amount}
+    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+    className="input !pl-10"
+    placeholder="0.00"
+  />
+</div>
             {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount}</p>}
           </div>
 

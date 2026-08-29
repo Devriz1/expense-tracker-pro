@@ -46,6 +46,7 @@ interface StoreState {
   getBudgetStatus: () => BudgetStatus[];
   exportToCSV: () => void;
   exportToJSON: () => void;
+  exportToPDF: () => void;
 }
 
 export const useStore = create<StoreState>()(
@@ -258,6 +259,41 @@ export const useStore = create<StoreState>()(
         a.download = `expenses-${new Date().toISOString().split('T')[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);
+      },
+
+      exportToPDF: () => {
+        const { transactions } = get();
+        import('jspdf').then(({ jsPDF }) => {
+          import('jspdf-autotable').then(({ default: autoTable }) => {
+            const doc = new jsPDF();
+            
+            doc.setFontSize(18);
+            doc.text('Expense Tracker Report', 14, 20);
+            doc.setFontSize(10);
+            doc.text(`Generated on: ${new Date().toLocaleDateString('en-IN')}`, 14, 28);
+            
+            const headers = [['Date', 'Type', 'Category', 'Amount', 'Payment Method', 'Note']];
+            const rows = transactions.map((t) => [
+              new Date(t.date).toLocaleDateString('en-IN'),
+              t.type,
+              t.category,
+              `₹${t.amount.toLocaleString('en-IN')}`,
+              t.paymentMethod || '',
+              t.note || '',
+            ]);
+            
+            autoTable(doc, {
+              head: headers,
+              body: rows,
+              startY: 35,
+              theme: 'grid',
+              styles: { fontSize: 9 },
+              headStyles: { fillColor: [79, 70, 229] },
+            });
+            
+            doc.save(`expenses-${new Date().toISOString().split('T')[0]}.pdf`);
+          });
+        });
       },
     }),
     {
