@@ -4,10 +4,9 @@ import { useStore } from '../store/useStore';
 import Modal from './Modal';
 
 export default function Header() {
-  const { getSummary, clearAllTransactions, seedData } = useStore();
+  const { clearAllTransactions, seedData } = useStore();
   const [showClearModal, setShowClearModal] = useState(false);
   const [showSeedModal, setShowSeedModal] = useState(false);
-  const summary = getSummary();
 
   const handleClearAll = () => {
     clearAllTransactions();
@@ -48,31 +47,6 @@ export default function Header() {
             >
               <Trash2 className="w-5 h-5 text-red-500" />
             </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pb-4">
-          <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-            <p className="text-xs text-gray-500 mb-1">Balance</p>
-            <p className={`text-lg font-bold ${summary.balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-              ₹{summary.balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-            </p>
-          </div>
-          <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-            <p className="text-xs text-gray-500 mb-1">Income</p>
-            <p className="text-lg font-bold text-emerald-600">
-              ₹{summary.totalIncome.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-            </p>
-          </div>
-          <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-            <p className="text-xs text-gray-500 mb-1">Expenses</p>
-            <p className="text-lg font-bold text-red-600">
-              ₹{summary.totalExpenses.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-            </p>
-          </div>
-          <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-            <p className="text-xs text-gray-500 mb-1">Savings Rate</p>
-            <p className="text-lg font-bold text-indigo-600">{summary.monthlySavingsRate}%</p>
           </div>
         </div>
       </div>
