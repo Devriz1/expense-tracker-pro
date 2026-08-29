@@ -66,7 +66,7 @@ export default function AnalyticsCharts() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 [&_*]:focus:outline-none">
       <div className="card">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Expense Breakdown</h3>
         {categoryBreakdown.length === 0 ? (
@@ -74,7 +74,7 @@ export default function AnalyticsCharts() {
         ) : (
           <>
             <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
+              <PieChart style={{ outline: 'none' }}>
                 <Pie
                   data={categoryBreakdown}
                   cx="50%"
@@ -84,9 +84,10 @@ export default function AnalyticsCharts() {
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
+                  style={{ outline: 'none' }}
                 >
                   {categoryBreakdown.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} style={{ outline: 'none' }} />
                   ))}
                 </Pie>
                 <Tooltip content={<CustomTooltip />} />
@@ -110,13 +111,13 @@ export default function AnalyticsCharts() {
           <p className="text-gray-500 text-center py-8">No trend data available</p>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyTrends}>
+            <BarChart data={monthlyTrends} style={{ outline: 'none' }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="month" stroke="#64748b" />
               <YAxis stroke="#64748b" />
               <Tooltip content={<BarChartTooltip />} />
-              <Bar dataKey="income" fill="#10b981" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="expenses" fill="#ef4444" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="income" fill="#10b981" radius={[4, 4, 0, 0]} style={{ outline: 'none' }} />
+              <Bar dataKey="expenses" fill="#ef4444" radius={[4, 4, 0, 0]} style={{ outline: 'none' }} />
             </BarChart>
           </ResponsiveContainer>
         )}
