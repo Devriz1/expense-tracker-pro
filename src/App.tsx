@@ -8,7 +8,9 @@ import AnalyticsCharts from './components/AnalyticsCharts';
 import BudgetProgress from './components/BudgetProgress';
 import EmptyState from './components/EmptyState';
 import InstallPrompt from './components/InstallPrompt';
+import PaymentVerificationPrompt from './components/PaymentVerificationPrompt';
 import { useStore } from './store/useStore';
+import { useUpiPayment } from './hooks/useUpiPayment';
 
 type Tab = 'dashboard' | 'transactions' | 'analytics' | 'budget';
 
@@ -17,6 +19,13 @@ export default function App() {
   const [showTransactionForm, setShowTransactionForm] = useState(false);
   const transactions = useStore((state) => state.transactions);
   const getSummary = useStore((state) => state.getSummary);
+
+  const {
+    verificationPrompt,
+    markPaymentCompleted,
+    markPaymentFailed,
+    dismissVerification,
+  } = useUpiPayment();
 
   const summary = getSummary();
   const hasTransactions = transactions.length > 0;
@@ -167,6 +176,15 @@ export default function App() {
 
       {showTransactionForm && (
         <TransactionForm onClose={() => setShowTransactionForm(false)} />
+      )}
+
+      {verificationPrompt && (
+        <PaymentVerificationPrompt
+          payment={verificationPrompt.payment}
+          onConfirm={() => markPaymentCompleted(verificationPrompt.payment.id)}
+          onReject={() => markPaymentFailed(verificationPrompt.payment.id)}
+          onDismiss={dismissVerification}
+        />
       )}
 
       <InstallPrompt />

@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { X, Plus, Scan } from 'lucide-react';
+import { X, Plus, Scan, Smartphone } from 'lucide-react';
 import { useStore, CATEGORIES, PAYMENT_METHODS } from '../store/useStore';
 import type { Transaction } from '../store/types';
 import ReceiptScanner from './ReceiptScanner';
 import type { ReceiptData } from '../utils/ocr';
+import UPIQrScanner from './UPIQrScanner';
+import type { UpiPaymentData } from '../utils/upiParser';
+import PaymentModal from './PaymentModal';
 
 interface TransactionFormProps {
   onClose: () => void;
@@ -25,6 +28,9 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showScanner, setShowScanner] = useState(false);
+  const [showUpiScanner, setShowUpiScanner] = useState(false);
+  const [upiData, setUpiData] = useState<UpiPaymentData | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   useEffect(() => {
     if (editTransaction) {
@@ -49,6 +55,17 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
     if (data.date) {
       setFormData((prev) => ({ ...prev, date: data.date || prev.date }));
     }
+  };
+
+  const handleUpiScanSuccess = (data: UpiPaymentData) => {
+    setUpiData(data);
+    setShowUpiScanner(false);
+    setShowPaymentModal(true);
+  };
+
+  const handleUpiLaunch = (deepLink: string) => {
+    setShowPaymentModal(false);
+    window.location.href = deepLink;
   };
 
   const validate = () => {
@@ -194,6 +211,15 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
             Scan Receipt
           </button>
 
+          <button
+            type="button"
+            onClick={() => setShowUpiScanner(true)}
+            className="btn btn-ghost w-full border border-dashed border-gray-300 text-sm"
+          >
+            <Smartphone className="w-4 h-4" />
+            Pay with UPI
+          </button>
+
           <button type="submit" className="btn btn-primary w-full text-sm">
             <Plus className="w-4 h-4" />
             {editTransaction ? 'Update Transaction' : 'Add Transaction'}
@@ -203,6 +229,21 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
 
       {showScanner && (
         <ReceiptScanner onScanComplete={handleReceiptScanned} onClose={() => setShowScanner(false)} />
+      )}
+
+      {showUpiScanner && (
+        <UPIQrScanner onScanSuccess={handleUpiScanSuccess} onClose={() => setShowUpiScanner(false)} />
+      )}
+
+      {showPaymentModal && upiData && (
+        <PaymentModal
+          paymentData={upiData}
+          onLaunch={handleUpiLaunch}
+          onCancel={() => {
+            setShowPaymentModal(false);
+            setUpiData(null);
+          }}
+        />
       )}
     </div>
   );

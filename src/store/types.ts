@@ -8,6 +8,7 @@ export interface Transaction {
   paymentMethod: string;
   createdAt: number;
   updatedAt?: number;
+  paymentStatus?: 'pending' | 'completed' | 'failed';
 }
 
 export interface Filters {
