@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { LayoutDashboard, List, BarChart3, Wallet, Plus, Shield } from 'lucide-react';
+import { useState } from 'react';
+import { LayoutDashboard, List, BarChart3, Wallet, Plus } from 'lucide-react';
 import Header from './components/Header';
 import SummaryCards from './components/SummaryCards';
 import TransactionList from './components/TransactionList';
@@ -8,21 +8,15 @@ import AnalyticsCharts from './components/AnalyticsCharts';
 import BudgetProgress from './components/BudgetProgress';
 import EmptyState from './components/EmptyState';
 import InstallPrompt from './components/InstallPrompt';
-import BiometricLockScreen from './components/BiometricLockScreen';
-import SecuritySettings from './components/SecuritySettings';
 import { useStore } from './store/useStore';
-import { useSecurityStore, initializeSecurityState } from './store/useSecurityStore';
 
-type Tab = 'dashboard' | 'transactions' | 'analytics' | 'budget' | 'settings';
+type Tab = 'dashboard' | 'transactions' | 'analytics' | 'budget';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [showTransactionForm, setShowTransactionForm] = useState(false);
   const transactions = useStore((state) => state.transactions);
   const getSummary = useStore((state) => state.getSummary);
-  const isLocked = useSecurityStore((state) => state.isLocked);
-  const setIsLocked = useSecurityStore((state) => state.setIsLocked);
-  const isBiometricEnabled = useSecurityStore((state) => state.isBiometricEnabled);
 
   const summary = getSummary();
   const hasTransactions = transactions.length > 0;
@@ -32,39 +26,7 @@ export default function App() {
     { id: 'transactions' as Tab, label: 'Transactions', icon: List },
     { id: 'analytics' as Tab, label: 'Analytics', icon: BarChart3 },
     { id: 'budget' as Tab, label: 'Budget', icon: Wallet },
-    { id: 'settings' as Tab, label: 'Settings', icon: Shield },
   ];
-
-  useEffect(() => {
-    initializeSecurityState();
-
-    if (isBiometricEnabled) {
-      setIsLocked(true);
-    }
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        setIsLocked(true);
-      }
-    };
-
-    const handlePageShow = (event: Event) => {
-      if ((event as PageTransitionEvent).persisted) {
-        setIsLocked(true);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('pageshow', handlePageShow);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('pageshow', handlePageShow);
-    };
-  }, [isBiometricEnabled, setIsLocked]);
-
-  if (isBiometricEnabled && isLocked) {
-    return <BiometricLockScreen />;
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -84,7 +46,6 @@ export default function App() {
               {activeTab === 'transactions' && 'Manage your income and expenses'}
               {activeTab === 'analytics' && 'Visualize your spending patterns'}
               {activeTab === 'budget' && 'Track your budget limits'}
-              {activeTab === 'settings' && 'App configuration and security'}
             </p>
           </div>
           
@@ -199,12 +160,6 @@ export default function App() {
           {activeTab === 'budget' && (
             <div className="space-y-6">
               <BudgetProgress />
-            </div>
-          )}
-
-          {activeTab === 'settings' && (
-            <div className="max-w-2xl">
-              <SecuritySettings />
             </div>
           )}
         </div>
