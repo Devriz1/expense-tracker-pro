@@ -36,14 +36,28 @@ export default function App() {
   ];
 
   useEffect(() => {
+    if (isBiometricEnabled) {
+      setIsLocked(true);
+    }
+
     const handleVisibilityChange = () => {
-      if (document.hidden && isBiometricEnabled) {
+      if (document.hidden) {
+        setIsLocked(true);
+      }
+    };
+
+    const handlePageShow = (event: Event) => {
+      if ((event as PageTransitionEvent).persisted) {
         setIsLocked(true);
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pageshow', handlePageShow);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pageshow', handlePageShow);
+    };
   }, [isBiometricEnabled, setIsLocked]);
 
   if (isBiometricEnabled && isLocked) {

@@ -21,9 +21,12 @@ export default function LockScreen() {
 
   useEffect(() => {
     if (isBiometricEnabled && biometricAvailable && credentialId) {
-      handleBiometricAuth();
+      const timer = setTimeout(() => {
+        handleBiometricAuth();
+      }, 300);
+      return () => clearTimeout(timer);
     }
-  }, []);
+  }, [isBiometricEnabled, biometricAvailable, credentialId]);
 
   const handleBiometricAuth = async () => {
     if (!credentialId) return;
@@ -62,7 +65,7 @@ export default function LockScreen() {
             {isBiometricLoading ? 'Verifying...' : 'Verify Biometric'}
           </button>
         ) : (
-          <p className="text-sm text-gray-500 text-center">Biometric authentication is not available on this device</p>
+          <p className="text-sm text-gray-500 text-center">Checking biometric availability...</p>
         )}
       </div>
     </div>
