@@ -21,7 +21,8 @@ export default function UPIQrScanner({ onScanSuccess, onClose }: UPIQrScannerPro
         scannerRef.current = scanner;
 
         const devices = await Html5Qrcode.getCameras();
-        const cameraId = devices?.[0]?.id || { facingMode: 'environment' };
+        const backCamera = devices.find((d) => /back|environment|rear/i.test(d.label || ''));
+        const cameraId = backCamera?.id || devices?.[0]?.id || { facingMode: 'environment' };
 
         await scanner.start(
           cameraId,
