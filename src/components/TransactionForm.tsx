@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Scan } from 'lucide-react';
 import { useStore, CATEGORIES, PAYMENT_METHODS } from '../store/useStore';
 import type { Transaction } from '../store/types';
+import ReceiptScanner from './ReceiptScanner';
+import type { ReceiptData } from '../utils/ocr';
 
 interface TransactionFormProps {
   onClose: () => void;
@@ -22,6 +24,7 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showScanner, setShowScanner] = useState(false);
 
   useEffect(() => {
     if (editTransaction) {
@@ -35,6 +38,18 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
       });
     }
   }, [editTransaction]);
+
+  const handleReceiptScanned = (data: ReceiptData) => {
+    if (data.amount) {
+      setFormData((prev) => ({ ...prev, amount: data.amount!.toString() }));
+    }
+    if (data.vendor) {
+      setFormData((prev) => ({ ...prev, note: data.vendor || prev.note }));
+    }
+    if (data.date) {
+      setFormData((prev) => ({ ...prev, date: data.date || prev.date }));
+    }
+  };
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -108,16 +123,16 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Amount</label>
             <div className="relative">
-  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10 pointer-events-none">₹</span>
-  <input
-    type="number"
-    step="0.01"
-    value={formData.amount}
-    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-    className="input !pl-10"
-    placeholder="0.00"
-  />
-</div>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10 pointer-events-none">₹</span>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.amount}
+                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                className="input !pl-10"
+                placeholder="0.00"
+              />
+            </div>
             {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount}</p>}
           </div>
 
@@ -169,12 +184,25 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
             />
           </div>
 
+          <button
+            type="button"
+            onClick={() => setShowScanner(true)}
+            className="btn btn-ghost w-full border border-dashed border-gray-300"
+          >
+            <Scan className="w-4 h-4" />
+            Scan Receipt
+          </button>
+
           <button type="submit" className="btn btn-primary w-full">
             <Plus className="w-4 h-4" />
             {editTransaction ? 'Update Transaction' : 'Add Transaction'}
           </button>
         </form>
       </div>
+
+      {showScanner && (
+        <ReceiptScanner onScanComplete={handleReceiptScanned} onClose={() => setShowScanner(false)} />
+      )}
     </div>
   );
 }
