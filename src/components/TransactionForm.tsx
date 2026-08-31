@@ -7,6 +7,7 @@ import type { ReceiptData } from '../utils/ocr';
 import UPIQrScanner from './UPIQrScanner';
 import type { UpiPaymentData } from '../utils/upiParser';
 import PaymentModal from './PaymentModal';
+import { useSettingsStore } from '../store/useSettingsStore';
 
 interface TransactionFormProps {
   onClose: () => void;
@@ -31,6 +32,9 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
   const [showUpiScanner, setShowUpiScanner] = useState(false);
   const [upiData, setUpiData] = useState<UpiPaymentData | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+  const scanReceiptEnabled = useSettingsStore((state) => state.scanReceiptEnabled);
+  const payWithUpiEnabled = useSettingsStore((state) => state.payWithUpiEnabled);
 
   useEffect(() => {
     if (editTransaction) {
@@ -202,23 +206,27 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
             />
           </div>
 
-          <button
-            type="button"
-            onClick={() => setShowScanner(true)}
-            className="btn btn-ghost w-full border border-dashed border-gray-300 text-sm"
-          >
-            <Scan className="w-4 h-4" />
-            Scan Receipt
-          </button>
+          {scanReceiptEnabled && (
+            <button
+              type="button"
+              onClick={() => setShowScanner(true)}
+              className="btn btn-ghost w-full border border-dashed border-gray-300 text-sm"
+            >
+              <Scan className="w-4 h-4" />
+              Scan Receipt
+            </button>
+          )}
 
-          <button
-            type="button"
-            onClick={() => setShowUpiScanner(true)}
-            className="btn btn-ghost w-full border border-dashed border-gray-300 text-sm"
-          >
-            <Smartphone className="w-4 h-4" />
-            Pay with UPI
-          </button>
+          {payWithUpiEnabled && (
+            <button
+              type="button"
+              onClick={() => setShowUpiScanner(true)}
+              className="btn btn-ghost w-full border border-dashed border-gray-300 text-sm"
+            >
+              <Smartphone className="w-4 h-4" />
+              Pay with UPI
+            </button>
+          )}
 
           <button type="submit" className="btn btn-primary w-full text-sm">
             <Plus className="w-4 h-4" />
