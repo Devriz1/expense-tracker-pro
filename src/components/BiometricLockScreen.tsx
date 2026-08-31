@@ -1,35 +1,32 @@
 import { useState, useEffect } from 'react';
-import { Lock, Fingerprint } from 'lucide-react';
+import { Lock, Fingerprint, AlertCircle } from 'lucide-react';
 import { useSecurityStore } from '../store/useSecurityStore';
-import { authenticateWithSystemBiometrics, isBiometricAvailable } from '../utils/webauthn';
+import { authenticateWithSystemBiometrics, isBiometricAvailable, checkBiometricSupport } from '../utils/webauthn';
 
 export default function BiometricLockScreen() {
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [isBiometricLoading, setIsBiometricLoading] = useState(false);
   const [error, setError] = useState('');
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   const isBiometricEnabled = useSecurityStore((state) => state.isBiometricEnabled);
   const credentialId = useSecurityStore((state) => state.credentialId);
   const setIsLocked = useSecurityStore((state) => state.setIsLocked);
 
   useEffect(() => {
-    const checkBiometric = async () => {
-      const available = await isBiometricAvailable();
+    const checkSupport = async () => {
+      const supported = checkBiometricSupport();
+      const available = supported ? await isBiometricAvailable() : false;
       setBiometricAvailable(available);
     };
-    checkBiometric();
+    checkSupport();
   }, []);
-
-  useEffect(() => {
-    if (isBiometricEnabled && biometricAvailable && credentialId) {
-      authenticate();
-    }
-  }, [isBiometricEnabled, biometricAvailable, credentialId]);
 
   const authenticate = async () => {
     if (!credentialId) return;
     setIsBiometricLoading(true);
     setError('');
+    setHasInteracted(true);
     try {
       const success = await authenticateWithSystemBiometrics(credentialId);
       if (success) {
@@ -38,8 +35,15 @@ export default function BiometricLockScreen() {
         setError('Authentication failed. Please try again.');
       }
     } catch (err) {
-      if (err instanceof Error && err.name === 'NotAllowedError') {
-        setError('Authentication was cancelled.');
+      console.error('Biometric authentication error:', err);
+      if (err instanceof Error) {
+        if (err.name === 'NotAllowedError') {
+          setError('Authentication was cancelled or blocked. Tap the button below to retry.');
+        } else if (err.name === 'NotSupportedError') {
+          setError('Biometric authentication is not supported in this browser or context.');
+        } else {
+          setError('An unexpected error occurred. Please try again.');
+        }
       } else {
         setError('An unexpected error occurred. Please try again.');
       }
@@ -49,6 +53,8 @@ export default function BiometricLockScreen() {
   };
 
   if (!isBiometricEnabled) return null;
+
+  const isLikelyBlockedByBrowser = !hasInteracted && !biometricAvailable && checkBiometricSupport();
 
   return (
     <div className="fixed inset-0 bg-white flex items-center justify-center z-50">
@@ -61,7 +67,12 @@ export default function BiometricLockScreen() {
           <p className="text-gray-500">Authenticate with your system biometrics to continue</p>
         </div>
 
-        {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 text-red-600 mt-0.5" />
+            <p className="text-red-600 text-sm text-left">{error}</p>
+          </div>
+        )}
 
         {biometricAvailable ? (
           <button
@@ -74,9 +85,26 @@ export default function BiometricLockScreen() {
             {isBiometricLoading ? 'Verifying...' : 'Authenticate with System Biometrics'}
           </button>
         ) : (
-          <p className="text-sm text-gray-500 text-center">
-            Biometric authentication is not available on this device.
-          </p>
+          <div className="space-y-3">
+            {isLikelyBlockedByBrowser ? (
+              <button
+                type="button"
+                onClick={authenticate}
+                disabled={isBiometricLoading}
+                className="btn btn-primary w-full"
+              >
+                <Fingerprint className="w-4 h-4" />
+                {isBiometricLoading ? 'Verifying...' : 'Tap to Authenticate'}
+              </button>
+            ) : (
+              <p className="text-sm text-gray-500 text-center">
+                Biometric authentication is not available on this device or browser.
+              </p>
+            )}
+            <p className="text-xs text-gray-400 text-center">
+              Make sure your device has biometrics enrolled and you are using a supported browser like Safari or Chrome.
+            </p>
+          </div>
         )}
       </div>
     </div>
