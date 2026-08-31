@@ -128,27 +128,49 @@ export default function ReceiptScanner({ onScanComplete, onClose }: ReceiptScann
                     <span className="font-medium">Scan Complete</span>
                   </div>
 
-                  <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-                    {result.amount && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Amount</span>
-                        <span className="text-sm font-medium text-gray-900">₹{result.amount.toFixed(2)}</span>
+                  <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                    {result.amount !== undefined && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Amount</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={result.amount}
+                          onChange={(e) =>
+                            setResult((prev) => prev ? { ...prev, amount: parseFloat(e.target.value) || 0 } : prev)
+                          }
+                          className="input"
+                        />
                       </div>
                     )}
-                    {result.vendor && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Vendor</span>
-                        <span className="text-sm font-medium text-gray-900">{result.vendor}</span>
+                    {result.vendor !== undefined && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Vendor</label>
+                        <input
+                          type="text"
+                          value={result.vendor}
+                          onChange={(e) =>
+                            setResult((prev) => prev ? { ...prev, vendor: e.target.value } : prev)
+                          }
+                          className="input"
+                        />
                       </div>
                     )}
-                    {result.date && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Date</span>
-                        <span className="text-sm font-medium text-gray-900">{result.date}</span>
+                    {result.date !== undefined && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Date</label>
+                        <input
+                          type="text"
+                          value={result.date}
+                          onChange={(e) =>
+                            setResult((prev) => prev ? { ...prev, date: e.target.value } : prev)
+                          }
+                          className="input"
+                        />
                       </div>
                     )}
-                    {!result.amount && !result.vendor && !result.date && (
-                      <p className="text-sm text-gray-500">No details could be extracted. Please enter manually.</p>
+                    {result.amount === undefined && result.vendor === undefined && result.date === undefined && (
+                      <p className="text-sm text-gray-500">No details could be extracted. Please enter manually below.</p>
                     )}
                   </div>
 

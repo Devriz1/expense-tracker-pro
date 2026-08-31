@@ -86,10 +86,10 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white w-full max-w-md p-6 rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50">
+      <div className="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[100dvh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900">
             {editTransaction ? 'Edit Transaction' : 'Add Transaction'}
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
@@ -97,16 +97,16 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-3 sm:space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Type</label>
             <div className="flex gap-2">
               {['expense', 'income'].map((type) => (
                 <button
                   key={type}
                   type="button"
                   onClick={() => setFormData({ ...formData, type: type as 'expense' | 'income' })}
-                  className={`flex-1 py-2.5 rounded-xl font-medium transition-all ${
+                  className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${
                     formData.type === type
                       ? type === 'expense'
                         ? 'bg-red-500 text-white'
@@ -121,51 +121,52 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Amount</label>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Amount</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10 pointer-events-none">₹</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10 pointer-events-none text-sm">₹</span>
               <input
                 type="number"
                 step="0.01"
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                className="input !pl-10"
+                className="input !pl-8 text-sm"
                 placeholder="0.00"
               />
             </div>
-            {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount}</p>}
+            {errors.amount && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.amount}</p>}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Category</label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="select text-sm"
+              >
+                {(CATEGORIES[formData.type] || []).map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Date</label>
+              <input
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                className="input text-sm"
+              />
+              {errors.date && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.date}</p>}
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-            <select
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              className="select"
-            >
-              {(CATEGORIES[formData.type] || []).map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-            <input
-              type="date"
-              value={formData.date}
-              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              className="input"
-            />
-            {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Payment Method</label>
             <select
               value={formData.paymentMethod}
               onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-              className="select"
+              className="select text-sm"
             >
               {PAYMENT_METHODS.map((method) => (
                 <option key={method} value={method}>{method}</option>
@@ -174,12 +175,12 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Note (Optional)</label>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Note (Optional)</label>
             <input
               type="text"
               value={formData.note}
               onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-              className="input"
+              className="input text-sm"
               placeholder="Add a note..."
             />
           </div>
@@ -187,13 +188,13 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
           <button
             type="button"
             onClick={() => setShowScanner(true)}
-            className="btn btn-ghost w-full border border-dashed border-gray-300"
+            className="btn btn-ghost w-full border border-dashed border-gray-300 text-sm"
           >
             <Scan className="w-4 h-4" />
             Scan Receipt
           </button>
 
-          <button type="submit" className="btn btn-primary w-full">
+          <button type="submit" className="btn btn-primary w-full text-sm">
             <Plus className="w-4 h-4" />
             {editTransaction ? 'Update Transaction' : 'Add Transaction'}
           </button>
