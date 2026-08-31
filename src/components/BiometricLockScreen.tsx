@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Lock, Fingerprint } from 'lucide-react';
 import { useSecurityStore } from '../store/useSecurityStore';
-import { authenticateWithBiometric, isBiometricAvailable } from '../utils/webauthn';
+import { authenticateWithSystemBiometrics, isBiometricAvailable } from '../utils/webauthn';
 
-export default function LockScreen() {
+export default function BiometricLockScreen() {
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [isBiometricLoading, setIsBiometricLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const isBiometricEnabled = useSecurityStore((state) => state.isBiometricEnabled);
   const credentialId = useSecurityStore((state) => state.credentialId);
@@ -21,20 +22,26 @@ export default function LockScreen() {
 
   useEffect(() => {
     if (isBiometricEnabled && biometricAvailable && credentialId) {
-      const timer = setTimeout(() => {
-        handleBiometricAuth();
-      }, 300);
-      return () => clearTimeout(timer);
+      authenticate();
     }
   }, [isBiometricEnabled, biometricAvailable, credentialId]);
 
-  const handleBiometricAuth = async () => {
+  const authenticate = async () => {
     if (!credentialId) return;
     setIsBiometricLoading(true);
+    setError('');
     try {
-      const success = await authenticateWithBiometric(credentialId);
+      const success = await authenticateWithSystemBiometrics(credentialId);
       if (success) {
         setIsLocked(false);
+      } else {
+        setError('Authentication failed. Please try again.');
+      }
+    } catch (err) {
+      if (err instanceof Error && err.name === 'NotAllowedError') {
+        setError('Authentication was cancelled.');
+      } else {
+        setError('An unexpected error occurred. Please try again.');
       }
     } finally {
       setIsBiometricLoading(false);
@@ -51,21 +58,25 @@ export default function LockScreen() {
             <Lock className="w-8 h-8 text-indigo-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">App Locked</h2>
-          <p className="text-gray-500">Use biometrics to continue</p>
+          <p className="text-gray-500">Authenticate with your system biometrics to continue</p>
         </div>
+
+        {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
 
         {biometricAvailable ? (
           <button
             type="button"
-            onClick={handleBiometricAuth}
+            onClick={authenticate}
             disabled={isBiometricLoading}
             className="btn btn-success w-full"
           >
             <Fingerprint className="w-4 h-4" />
-            {isBiometricLoading ? 'Verifying...' : 'Verify Biometric'}
+            {isBiometricLoading ? 'Verifying...' : 'Authenticate with System Biometrics'}
           </button>
         ) : (
-          <p className="text-sm text-gray-500 text-center">Checking biometric availability...</p>
+          <p className="text-sm text-gray-500 text-center">
+            Biometric authentication is not available on this device.
+          </p>
         )}
       </div>
     </div>

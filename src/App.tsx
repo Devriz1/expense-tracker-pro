@@ -8,10 +8,10 @@ import AnalyticsCharts from './components/AnalyticsCharts';
 import BudgetProgress from './components/BudgetProgress';
 import EmptyState from './components/EmptyState';
 import InstallPrompt from './components/InstallPrompt';
-import LockScreen from './components/LockScreen';
+import BiometricLockScreen from './components/BiometricLockScreen';
 import SecuritySettings from './components/SecuritySettings';
 import { useStore } from './store/useStore';
-import { useSecurityStore } from './store/useSecurityStore';
+import { useSecurityStore, initializeSecurityState } from './store/useSecurityStore';
 
 type Tab = 'dashboard' | 'transactions' | 'analytics' | 'budget' | 'settings';
 
@@ -36,6 +36,8 @@ export default function App() {
   ];
 
   useEffect(() => {
+    initializeSecurityState();
+
     if (isBiometricEnabled) {
       setIsLocked(true);
     }
@@ -61,7 +63,7 @@ export default function App() {
   }, [isBiometricEnabled, setIsLocked]);
 
   if (isBiometricEnabled && isLocked) {
-    return <LockScreen />;
+    return <BiometricLockScreen />;
   }
 
   return (

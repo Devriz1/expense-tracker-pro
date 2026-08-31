@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Shield, Fingerprint } from 'lucide-react';
 import { useSecurityStore } from '../store/useSecurityStore';
-import { isBiometricAvailable, registerBiometric } from '../utils/webauthn';
+import { isBiometricAvailable, registerSystemBiometric } from '../utils/webauthn';
 
 export default function SecuritySettings() {
   const [error, setError] = useState('');
@@ -34,7 +34,7 @@ export default function SecuritySettings() {
         setError('Biometric authentication is not available on this device');
         return;
       }
-      const credentialId = await registerBiometric();
+      const credentialId = await registerSystemBiometric('User');
       if (credentialId) {
         setCredentialId(credentialId);
         setBiometricEnabled(true);
