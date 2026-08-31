@@ -1,18 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Lock, Unlock, Fingerprint } from 'lucide-react';
+import { Lock, Fingerprint } from 'lucide-react';
 import { useSecurityStore } from '../store/useSecurityStore';
 import { authenticateWithBiometric, isBiometricAvailable } from '../utils/webauthn';
 
 export default function LockScreen() {
-  const [pin, setPin] = useState('');
-  const [error, setError] = useState('');
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [isBiometricLoading, setIsBiometricLoading] = useState(false);
 
-  const isPinEnabled = useSecurityStore((state) => state.isPinEnabled);
   const isBiometricEnabled = useSecurityStore((state) => state.isBiometricEnabled);
   const credentialId = useSecurityStore((state) => state.credentialId);
-  const verifyPin = useSecurityStore((state) => state.verifyPin);
   const setIsLocked = useSecurityStore((state) => state.setIsLocked);
 
   useEffect(() => {
@@ -42,20 +38,7 @@ export default function LockScreen() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isPinEnabled) return;
-    const valid = await verifyPin(pin);
-    if (valid) {
-      setIsLocked(false);
-      setPin('');
-      setError('');
-    } else {
-      setError('Incorrect PIN');
-    }
-  };
-
-  if (!isPinEnabled && !isBiometricEnabled) return null;
+  if (!isBiometricEnabled) return null;
 
   return (
     <div className="fixed inset-0 bg-white flex items-center justify-center z-50">
@@ -65,49 +48,22 @@ export default function LockScreen() {
             <Lock className="w-8 h-8 text-indigo-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">App Locked</h2>
-          <p className="text-gray-500">Enter your PIN or use biometrics to continue</p>
+          <p className="text-gray-500">Use biometrics to continue</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {isPinEnabled && (
-            <div>
-              <input
-                type="password"
-                value={pin}
-                onChange={(e) => {
-                  setPin(e.target.value);
-                  setError('');
-                }}
-                placeholder="Enter PIN"
-                className="input text-center text-2xl tracking-widest"
-                maxLength={6}
-                autoFocus
-              />
-              {error && <p className="text-red-500 text-sm mt-2 text-center">{error}</p>}
-            </div>
-          )}
-
-          <div className="flex gap-2">
-            {isPinEnabled && (
-              <button type="submit" className="btn btn-primary flex-1">
-                <Unlock className="w-4 h-4" />
-                Unlock
-              </button>
-            )}
-
-            {isBiometricEnabled && biometricAvailable && (
-              <button
-                type="button"
-                onClick={handleBiometricAuth}
-                disabled={isBiometricLoading}
-                className={`btn ${isBiometricEnabled && biometricAvailable ? 'btn-success' : 'btn-ghost'} ${!isPinEnabled ? 'w-full' : ''}`}
-              >
-                <Fingerprint className="w-4 h-4" />
-                {isBiometricLoading ? 'Verifying...' : 'Biometric'}
-              </button>
-            )}
-          </div>
-        </form>
+        {biometricAvailable ? (
+          <button
+            type="button"
+            onClick={handleBiometricAuth}
+            disabled={isBiometricLoading}
+            className="btn btn-success w-full"
+          >
+            <Fingerprint className="w-4 h-4" />
+            {isBiometricLoading ? 'Verifying...' : 'Verify Biometric'}
+          </button>
+        ) : (
+          <p className="text-sm text-gray-500 text-center">Biometric authentication is not available on this device</p>
+        )}
       </div>
     </div>
   );

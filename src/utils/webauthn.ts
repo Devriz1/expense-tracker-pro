@@ -1,4 +1,4 @@
-const CHALLENGE = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
+export const CHALLENGE = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
 
 export async function isBiometricAvailable(): Promise<boolean> {
   try {
@@ -64,12 +64,4 @@ export async function authenticateWithBiometric(credentialId: string): Promise<b
     console.error('Biometric authentication failed:', error);
     return false;
   }
-}
-
-export async function hashPin(pin: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(pin + 'expense-tracker-salt');
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }

@@ -22,7 +22,6 @@ export default function App() {
   const getSummary = useStore((state) => state.getSummary);
   const isLocked = useSecurityStore((state) => state.isLocked);
   const setIsLocked = useSecurityStore((state) => state.setIsLocked);
-  const isPinEnabled = useSecurityStore((state) => state.isPinEnabled);
   const isBiometricEnabled = useSecurityStore((state) => state.isBiometricEnabled);
 
   const summary = getSummary();
@@ -38,16 +37,16 @@ export default function App() {
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden && (isPinEnabled || isBiometricEnabled)) {
+      if (document.hidden && isBiometricEnabled) {
         setIsLocked(true);
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [isPinEnabled, isBiometricEnabled, setIsLocked]);
+  }, [isBiometricEnabled, setIsLocked]);
 
-  if ((isPinEnabled || isBiometricEnabled) && isLocked) {
+  if (isBiometricEnabled && isLocked) {
     return <LockScreen />;
   }
 
