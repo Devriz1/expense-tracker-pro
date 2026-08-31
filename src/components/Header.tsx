@@ -1,12 +1,14 @@
-import { Wallet, Trash2, Database } from 'lucide-react';
+import { Wallet, Trash2, Database, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import Modal from './Modal';
+import SettingsContent from './SettingsContent';
 
 export default function Header() {
   const { clearAllTransactions, seedData } = useStore();
   const [showClearModal, setShowClearModal] = useState(false);
   const [showSeedModal, setShowSeedModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const handleClearAll = () => {
     clearAllTransactions();
@@ -33,6 +35,13 @@ export default function Header() {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowSettingsModal(true)}
+              className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+              title="Settings"
+            >
+              <Settings className="w-5 h-5 text-gray-500" />
+            </button>
             <button
               onClick={() => setShowSeedModal(true)}
               className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
@@ -81,6 +90,14 @@ export default function Header() {
             Load Data
           </button>
         </div>
+      </Modal>
+
+      <Modal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        title="Settings"
+      >
+        <SettingsContent onClose={() => setShowSettingsModal(false)} />
       </Modal>
     </header>
   );
