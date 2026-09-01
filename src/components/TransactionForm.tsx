@@ -49,6 +49,15 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
     }
   }, [editTransaction]);
 
+  const handleTypeChange = (type: 'expense' | 'income') => {
+    const categories = CATEGORIES[type] || [];
+    setFormData((prev) => ({
+      ...prev,
+      type,
+      category: categories[0] || prev.category,
+    }));
+  };
+
   const handleReceiptScanned = (data: ReceiptData) => {
     if (data.amount) {
       setFormData((prev) => ({ ...prev, amount: data.amount!.toString() }));
@@ -126,7 +135,7 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
                 <button
                   key={type}
                   type="button"
-                  onClick={() => setFormData({ ...formData, type: type as 'expense' | 'income' })}
+                  onClick={() => handleTypeChange(type as 'expense' | 'income')}
                   className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${
                     formData.type === type
                       ? type === 'expense'
