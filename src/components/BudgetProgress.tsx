@@ -5,11 +5,14 @@ export default function BudgetProgress() {
   const transactions = useStore((state) => state.transactions);
   const budgetLimits = useStore((state) => state.budgetLimits);
   const setBudgetLimit = useStore((state) => state.setBudgetLimit);
+  const setTotalBudget = useStore((state) => state.setTotalBudget);
   const resetBudgetLimits = useStore((state) => state.resetBudgetLimits);
 
   const [editing, setEditing] = useState(false);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [editingTotal, setEditingTotal] = useState(false);
+  const [totalEditValue, setTotalEditValue] = useState('');
 
   const budgetStatus = useMemo(() => {
     const spending: Record<string, number> = {};
@@ -50,6 +53,25 @@ export default function BudgetProgress() {
     setEditValue('');
   };
 
+  const startEditTotal = () => {
+    setTotalEditValue(totalBudget.toString());
+    setEditingTotal(true);
+  };
+
+  const saveTotalEdit = () => {
+    const numValue = parseFloat(totalEditValue);
+    if (!isNaN(numValue) && numValue >= 0) {
+      setTotalBudget(numValue);
+    }
+    setEditingTotal(false);
+    setTotalEditValue('');
+  };
+
+  const cancelTotalEdit = () => {
+    setEditingTotal(false);
+    setTotalEditValue('');
+  };
+
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-4">
@@ -74,9 +96,32 @@ export default function BudgetProgress() {
 
       <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-xl">
         <span className="text-sm text-gray-600">Total Budget</span>
-        <span className="text-sm font-medium text-gray-900">
-          ₹{totalSpent.toLocaleString('en-IN')} / ₹{totalBudget.toLocaleString('en-IN')}
-        </span>
+        {editingTotal ? (
+          <div className="flex items-center gap-1">
+            <span className="text-sm text-gray-500">₹</span>
+            <input
+              type="number"
+              value={totalEditValue}
+              onChange={(e) => setTotalEditValue(e.target.value)}
+              onBlur={saveTotalEdit}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') saveTotalEdit();
+                if (e.key === 'Escape') cancelTotalEdit();
+              }}
+              autoFocus
+              className="w-28 px-2 py-1 text-sm border border-indigo-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+        ) : (
+          <button
+            onClick={startEditTotal}
+            className={`text-sm font-medium ${editing ? 'text-indigo-600 hover:text-indigo-700' : 'text-gray-900'}`}
+            disabled={!editing}
+            title={editing ? 'Click to edit total budget' : 'Enable edit mode to change total budget'}
+          >
+            ₹{totalSpent.toLocaleString('en-IN')} / ₹{totalBudget.toLocaleString('en-IN')}
+          </button>
+        )}
       </div>
 
       {budgetStatus.length === 0 ? (

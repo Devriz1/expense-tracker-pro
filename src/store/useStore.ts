@@ -38,6 +38,7 @@ interface StoreState {
   clearAllTransactions: () => void;
   seedData: () => void;
   setBudgetLimit: (category: string, limit: number) => void;
+  setTotalBudget: (total: number) => void;
   resetBudgetLimits: () => void;
   getFilteredTransactions: () => Transaction[];
   getSummary: () => Summary;
@@ -107,6 +108,17 @@ export const useStore = create<StoreState>()(
         set((state) => ({
           budgetLimits: { ...state.budgetLimits, [category]: limit },
         })),
+
+      setTotalBudget: (total) =>
+        set(() => {
+          const expenseCategories = CATEGORIES.expense;
+          const perCategory = total / expenseCategories.length;
+          const newLimits: Record<string, number> = {};
+          expenseCategories.forEach((cat) => {
+            newLimits[cat] = perCategory;
+          });
+          return { budgetLimits: newLimits };
+        }),
 
       resetBudgetLimits: () =>
         set({ budgetLimits: { ...BUDGET_LIMITS } }),
