@@ -29,6 +29,7 @@ interface StoreState {
   transactions: Transaction[];
   filters: Filters;
   budgetLimits: Record<string, number>;
+  totalBudget: number;
   
   setFilters: (filters: Partial<Filters>) => void;
   resetFilters: () => void;
@@ -61,6 +62,7 @@ export const useStore = create<StoreState>()(
         category: 'all',
       },
       budgetLimits: { ...BUDGET_LIMITS },
+      totalBudget: Object.values(BUDGET_LIMITS).reduce((s, l) => s + l, 0),
 
       setFilters: (newFilters) =>
         set((state) => ({
@@ -110,18 +112,10 @@ export const useStore = create<StoreState>()(
         })),
 
       setTotalBudget: (total) =>
-        set(() => {
-          const expenseCategories = CATEGORIES.expense;
-          const perCategory = total / expenseCategories.length;
-          const newLimits: Record<string, number> = {};
-          expenseCategories.forEach((cat) => {
-            newLimits[cat] = perCategory;
-          });
-          return { budgetLimits: newLimits };
-        }),
+        set({ totalBudget: total }),
 
       resetBudgetLimits: () =>
-        set({ budgetLimits: { ...BUDGET_LIMITS } }),
+        set({ budgetLimits: { ...BUDGET_LIMITS }, totalBudget: Object.values(BUDGET_LIMITS).reduce((s, l) => s + l, 0) }),
 
       seedData: () => {
         const now = Date.now();
@@ -232,12 +226,14 @@ export const useStore = create<StoreState>()(
             monthlySpending[t.category] = (monthlySpending[t.category] || 0) + t.amount;
           });
 
-        return Object.entries(budgetLimits).map(([category, limit]) => ({
-          category,
-          limit,
-          spent: monthlySpending[category] || 0,
-          percentage: limit > 0 ? ((monthlySpending[category] || 0) / limit) * 100 : 0,
-        }));
+        return Object.entries(budgetLimits)
+          .filter(([category]) => CATEGORIES.expense.includes(category as any))
+          .map(([category, limit]) => ({
+            category,
+            limit,
+            spent: monthlySpending[category] || 0,
+            percentage: limit > 0 ? ((monthlySpending[category] || 0) / limit) * 100 : 0,
+          }));
       },
 
       exportToCSV: () => {
@@ -313,6 +309,7 @@ export const useStore = create<StoreState>()(
       partialize: (state) => ({
         transactions: state.transactions,
         budgetLimits: state.budgetLimits,
+        totalBudget: state.totalBudget,
       }),
     }
   )

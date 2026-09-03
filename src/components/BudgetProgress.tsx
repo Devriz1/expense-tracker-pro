@@ -4,6 +4,7 @@ import { useStore } from '../store/useStore';
 export default function BudgetProgress() {
   const transactions = useStore((state) => state.transactions);
   const budgetLimits = useStore((state) => state.budgetLimits);
+  const totalBudget = useStore((state) => state.totalBudget);
   const setBudgetLimit = useStore((state) => state.setBudgetLimit);
   const setTotalBudget = useStore((state) => state.setTotalBudget);
   const resetBudgetLimits = useStore((state) => state.resetBudgetLimits);
@@ -31,7 +32,6 @@ export default function BudgetProgress() {
     }));
   }, [transactions, budgetLimits]);
 
-  const totalBudget = Object.values(budgetLimits).reduce((s, l) => s + l, 0);
   const totalSpent = budgetStatus.reduce((s, item) => s + item.spent, 0);
 
   const startEdit = (category: string, currentLimit: number) => {

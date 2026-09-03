@@ -7,8 +7,12 @@ interface SettingsContentProps {
 export default function SettingsContent({ onClose }: SettingsContentProps) {
   const scanReceiptEnabled = useSettingsStore((state) => state.scanReceiptEnabled);
   const payWithUpiEnabled = useSettingsStore((state) => state.payWithUpiEnabled);
+  const darkModeEnabled = useSettingsStore((state) => state.darkModeEnabled);
+  const appLockEnabled = useSettingsStore((state) => state.appLockEnabled);
   const setScanReceiptEnabled = useSettingsStore((state) => state.setScanReceiptEnabled);
   const setPayWithUpiEnabled = useSettingsStore((state) => state.setPayWithUpiEnabled);
+  const setDarkModeEnabled = useSettingsStore((state) => state.setDarkModeEnabled);
+  const setAppLockEnabled = useSettingsStore((state) => state.setAppLockEnabled);
 
   return (
     <div className="space-y-4">
@@ -36,12 +40,12 @@ export default function SettingsContent({ onClose }: SettingsContentProps) {
           </div>
           <button
             onClick={() => setScanReceiptEnabled(!scanReceiptEnabled)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              scanReceiptEnabled ? 'bg-indigo-600' : 'bg-gray-200'
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors toggle-track ${
+              scanReceiptEnabled ? 'active' : ''
             }`}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              className={`toggle-thumb inline-block h-4 w-4 transform rounded-full transition-transform ${
                 scanReceiptEnabled ? 'translate-x-6' : 'translate-x-1'
               }`}
             />
@@ -55,13 +59,51 @@ export default function SettingsContent({ onClose }: SettingsContentProps) {
           </div>
           <button
             onClick={() => setPayWithUpiEnabled(!payWithUpiEnabled)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              payWithUpiEnabled ? 'bg-indigo-600' : 'bg-gray-200'
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors toggle-track ${
+              payWithUpiEnabled ? 'active' : ''
             }`}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              className={`toggle-thumb inline-block h-4 w-4 transform rounded-full transition-transform ${
                 payWithUpiEnabled ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-medium text-gray-700">Dark Mode</h3>
+            <p className="text-xs text-gray-500">Enable dark theme across the app</p>
+          </div>
+          <button
+            onClick={() => setDarkModeEnabled(!darkModeEnabled)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors toggle-track ${
+              darkModeEnabled ? 'active' : ''
+            }`}
+          >
+            <span
+              className={`toggle-thumb inline-block h-4 w-4 transform rounded-full transition-transform ${
+                darkModeEnabled ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-medium text-gray-700">App Lock</h3>
+            <p className="text-xs text-gray-500">Lock app when minimized or backgrounded</p>
+          </div>
+          <button
+            onClick={() => setAppLockEnabled(!appLockEnabled)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors toggle-track ${
+              appLockEnabled ? 'active' : ''
+            }`}
+          >
+            <span
+              className={`toggle-thumb inline-block h-4 w-4 transform rounded-full transition-transform ${
+                appLockEnabled ? 'translate-x-6' : 'translate-x-1'
               }`}
             />
           </button>
