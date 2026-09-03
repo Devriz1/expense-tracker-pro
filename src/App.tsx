@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { LayoutDashboard, List, BarChart3, Wallet, Plus, Settings } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
 import Header from './components/Header';
 import SummaryCards from './components/SummaryCards';
 import TransactionList from './components/TransactionList';
@@ -43,6 +44,14 @@ export default function App() {
     }
   }, [darkModeEnabled]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab === 'settings') {
+      setActiveTab('settings');
+    }
+  }, []);
+
   const tabs = [
     { id: 'dashboard' as Tab, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'transactions' as Tab, label: 'Transactions', icon: List },
@@ -53,6 +62,7 @@ export default function App() {
 
   return (
     <AppLock>
+      <Analytics />
       <div className="min-h-screen bg-gray-50">
         <Header />
         
