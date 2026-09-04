@@ -42,3 +42,10 @@ export interface MonthlyTrend {
   income: number;
   expenses: number;
 }
+
+export interface CategoryTotal {
+  category: string;
+  amount: number;
+  count: number;
+  percentage: string;
+}

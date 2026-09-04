@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, List, BarChart3, Wallet, Plus, Settings } from 'lucide-react';
+import { LayoutDashboard, List, BarChart3, Wallet, Plus, Settings, BookOpen } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import Header from './components/Header';
 import SummaryCards from './components/SummaryCards';
@@ -7,6 +7,7 @@ import TransactionList from './components/TransactionList';
 import TransactionForm from './components/TransactionForm';
 import AnalyticsCharts from './components/AnalyticsCharts';
 import BudgetProgress from './components/BudgetProgress';
+import ProfitLossStatement from './components/ProfitLossStatement';
 import EmptyState from './components/EmptyState';
 import InstallPrompt from './components/InstallPrompt';
 import PaymentVerificationPrompt from './components/PaymentVerificationPrompt';
@@ -16,7 +17,7 @@ import { useStore } from './store/useStore';
 import { useUpiPayment } from './hooks/useUpiPayment';
 import { useSettingsStore } from './store/useSettingsStore';
 
-type Tab = 'dashboard' | 'transactions' | 'analytics' | 'budget' | 'settings';
+type Tab = 'dashboard' | 'transactions' | 'analytics' | 'ledger' | 'budget' | 'settings';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -47,8 +48,8 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
-    if (tab === 'settings') {
-      setActiveTab('settings');
+    if (tab === 'settings' || tab === 'ledger') {
+      setActiveTab(tab);
     }
   }, []);
 
@@ -56,6 +57,7 @@ export default function App() {
     { id: 'dashboard' as Tab, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'transactions' as Tab, label: 'Transactions', icon: List },
     { id: 'analytics' as Tab, label: 'Analytics', icon: BarChart3 },
+    { id: 'ledger' as Tab, label: 'Ledger', icon: BookOpen },
     { id: 'budget' as Tab, label: 'Budget', icon: Wallet },
     { id: 'settings' as Tab, label: 'Settings', icon: Settings },
   ];
@@ -73,6 +75,7 @@ export default function App() {
                 {activeTab === 'dashboard' && 'Executive Dashboard'}
                 {activeTab === 'transactions' && 'Transactions'}
                 {activeTab === 'analytics' && 'Analytics & Insights'}
+              {activeTab === 'ledger' && 'Ledger'}
               {activeTab === 'budget' && 'Budget Management'}
               {activeTab === 'settings' && 'Settings'}
             </h2>
@@ -80,6 +83,7 @@ export default function App() {
               {activeTab === 'dashboard' && 'Overview of your financial health'}
               {activeTab === 'transactions' && 'Manage your income and expenses'}
               {activeTab === 'analytics' && 'Visualize your spending patterns'}
+              {activeTab === 'ledger' && 'Income vs Expense Statement'}
               {activeTab === 'budget' && 'Track your budget limits'}
               {activeTab === 'settings' && 'App preferences and backup'}
             </p>
@@ -191,6 +195,10 @@ export default function App() {
 
             {activeTab === 'analytics' && (
               <AnalyticsCharts />
+            )}
+
+            {activeTab === 'ledger' && (
+              <ProfitLossStatement />
             )}
 
             {activeTab === 'budget' && (
