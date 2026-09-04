@@ -16,6 +16,7 @@ import SettingsPage from './components/SettingsPage';
 import { useStore } from './store/useStore';
 import { useUpiPayment } from './hooks/useUpiPayment';
 import { useSettingsStore } from './store/useSettingsStore';
+import { useDailyReminder, TransactionReminderBanner } from './hooks/useDailyReminder';
 
 type Tab = 'dashboard' | 'transactions' | 'analytics' | 'ledger' | 'budget' | 'settings';
 
@@ -25,6 +26,13 @@ export default function App() {
   const transactions = useStore((state) => state.transactions);
   const getSummary = useStore((state) => state.getSummary);
   const darkModeEnabled = useSettingsStore((state) => state.darkModeEnabled);
+  const dailyReminderEnabled = useSettingsStore((state) => state.dailyReminderEnabled);
+  const reminderTimes = useSettingsStore((state) => state.reminderTimes);
+
+  const { showReminder, dismissReminder } = useDailyReminder(transactions, {
+    enabled: dailyReminderEnabled,
+    reminderTimes,
+  });
 
   const {
     verificationPrompt,
@@ -212,6 +220,18 @@ export default function App() {
           )}
         </div>
       </main>
+
+        {showReminder && (
+          <TransactionReminderBanner
+            reminder={{
+              ...showReminder,
+              onAddTransaction: () => {
+                dismissReminder();
+                setShowTransactionForm(true);
+              },
+            }}
+          />
+        )}
 
         {showTransactionForm && (
           <TransactionForm onClose={() => setShowTransactionForm(false)} />

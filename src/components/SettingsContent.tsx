@@ -9,10 +9,13 @@ export default function SettingsContent({ onClose }: SettingsContentProps) {
   const payWithUpiEnabled = useSettingsStore((state) => state.payWithUpiEnabled);
   const darkModeEnabled = useSettingsStore((state) => state.darkModeEnabled);
   const appLockEnabled = useSettingsStore((state) => state.appLockEnabled);
+  const dailyReminderEnabled = useSettingsStore((state) => state.dailyReminderEnabled);
+  const reminderTimes = useSettingsStore((state) => state.reminderTimes);
   const setScanReceiptEnabled = useSettingsStore((state) => state.setScanReceiptEnabled);
   const setPayWithUpiEnabled = useSettingsStore((state) => state.setPayWithUpiEnabled);
   const setDarkModeEnabled = useSettingsStore((state) => state.setDarkModeEnabled);
   const setAppLockEnabled = useSettingsStore((state) => state.setAppLockEnabled);
+  const setDailyReminderEnabled = useSettingsStore((state) => state.setDailyReminderEnabled);
 
   return (
     <div className="space-y-4">
@@ -104,6 +107,35 @@ export default function SettingsContent({ onClose }: SettingsContentProps) {
             <span
               className={`toggle-thumb inline-block h-4 w-4 transform rounded-full transition-transform ${
                 appLockEnabled ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-medium text-gray-700">Daily Reminder</h3>
+            <p className="text-xs text-gray-500">Get reminded to enter today's income and expenses</p>
+            {dailyReminderEnabled && (
+              <p className="text-xs text-indigo-600 mt-1">
+                Reminders at: {reminderTimes.map(t => {
+                  const [hours, minutes] = t.split(':');
+                  const date = new Date();
+                  date.setHours(Number(hours), Number(minutes));
+                  return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+                }).join(', ')}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={() => setDailyReminderEnabled(!dailyReminderEnabled)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors toggle-track ${
+              dailyReminderEnabled ? 'active' : ''
+            }`}
+          >
+            <span
+              className={`toggle-thumb inline-block h-4 w-4 transform rounded-full transition-transform ${
+                dailyReminderEnabled ? 'translate-x-6' : 'translate-x-1'
               }`}
             />
           </button>
