@@ -1,5 +1,4 @@
-import { getValidAccessToken, tokens } from './lib.js';
-import fetch from 'node-fetch';
+import { getValidAccessToken } from './lib.js';
 
 export default async (req, res) => {
   if (req.method !== 'POST') {
@@ -8,6 +7,11 @@ export default async (req, res) => {
 
   try {
     const { userId, backupData } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'userId is required' });
+    }
+
     const accessToken = await getValidAccessToken(userId);
 
     const json = JSON.stringify({
@@ -38,6 +42,7 @@ export default async (req, res) => {
 
     res.status(200).json({ success: true, message: 'Backup uploaded to Dropbox' });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('Dropbox backup error:', err);
+    res.status(500).json({ success: false, error: err instanceof Error ? err.message : 'Backup failed' });
   }
 };

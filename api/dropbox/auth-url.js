@@ -1,11 +1,5 @@
 import crypto from 'crypto';
-
-const DROPBOX_APP_KEY = process.env.DROPBOX_APP_KEY;
-const DROPBOX_APP_SECRET = process.env.DROPBOX_APP_SECRET;
-const REDIRECT_URI = process.env.DROPBOX_REDIRECT_URI || 'https://expense-tracker-pro-gamma-coral.vercel.app/api/dropbox/callback';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://expense-tracker-pro-gamma-coral.vercel.app';
-
-const tokens = new Map();
+import { DROPBOX_APP_KEY, DROPBOX_APP_SECRET, REDIRECT_URI, FRONTEND_URL } from './lib.js';
 
 export default async (req, res) => {
   if (req.method !== 'GET') {
@@ -15,6 +9,11 @@ export default async (req, res) => {
   const { userId } = req.query;
   const randomState = crypto.randomBytes(16).toString('hex');
   const state = `${randomState}:${userId || ''}`;
+
+  const stateData = { userId: userId || '', created_at: Date.now() };
+  const fs = require('fs');
+  try { fs.mkdirSync('/tmp/dropbox-states', { recursive: true }); } catch {}
+  fs.writeFileSync(`/tmp/dropbox-states/${state}.json`, JSON.stringify(stateData));
 
   const url = new URL('https://www.dropbox.com/oauth2/authorize');
   url.searchParams.set('response_type', 'code');

@@ -1,10 +1,4 @@
-import { tokens } from './lib.js';
-import fetch from 'node-fetch';
-
-const DROPBOX_APP_KEY = process.env.DROPBOX_APP_KEY;
-const DROPBOX_APP_SECRET = process.env.DROPBOX_APP_SECRET;
-const REDIRECT_URI = process.env.DROPBOX_REDIRECT_URI || 'https://expense-tracker-pro-gamma-coral.vercel.app/api/dropbox/callback';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://expense-tracker-pro-gamma-coral.vercel.app';
+import { storeToken, getStoredState, deleteStoredState, FRONTEND_URL } from './lib.js';
 
 export default async (req, res) => {
   if (req.method !== 'GET') {
@@ -22,11 +16,11 @@ export default async (req, res) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        code: code,
+        code: code as string,
         grant_type: 'authorization_code',
-        client_id: DROPBOX_APP_KEY,
-        client_secret: DROPBOX_APP_SECRET,
-        redirect_uri: REDIRECT_URI,
+        client_id: process.env.DROPBOX_APP_KEY,
+        client_secret: process.env.DROPBOX_APP_SECRET,
+        redirect_uri: process.env.DROPBOX_REDIRECT_URI || 'https://expense-tracker-pro-gamma-coral.vercel.app/api/dropbox/callback',
       }),
     });
 
@@ -38,14 +32,16 @@ export default async (req, res) => {
     const stateStr = Array.isArray(state) ? state[0] : state || '';
     const userId = stateStr.split(':')[1] || stateStr;
 
-    tokens.set(userId, {
+    await storeToken(userId, {
       access_token: data.access_token,
       refresh_token: data.refresh_token,
-      expires_at: Date.now() + data.expires_in * 1000,
+      expires_in: data.expires_in,
     });
+
+    await deleteStoredState(stateStr);
 
     res.redirect(`${FRONTEND_URL}/settings?tab=settings&dropbox_connected=true`);
   } catch (err) {
-    res.redirect(`${FRONTEND_URL}/settings?tab=settings&dropbox_error=${encodeURIComponent(err.message)}`);
+    res.redirect(`${FRONTEND_URL}/settings?tab=settings&dropbox_error=${encodeURIComponent(err instanceof Error ? err.message : 'Connection failed')}`);
   }
 };
