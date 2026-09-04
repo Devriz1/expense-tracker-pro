@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 
-type DatePreset = 'this-month' | 'last-month' | 'ytd' | 'custom' | 'fy';
+type DatePreset = 'all' | 'this-month' | 'last-month' | 'ytd' | 'custom' | 'fy';
 
 interface DateRange {
   start: Date;
@@ -9,6 +9,7 @@ interface DateRange {
 }
 
 const PRESET_LABELS: Record<DatePreset, string> = {
+  'all': 'All Time',
   'this-month': 'This Month',
   'last-month': 'Last Month',
   'ytd': 'Year to Date',
@@ -19,24 +20,27 @@ const PRESET_LABELS: Record<DatePreset, string> = {
 function getDateRange(preset: DatePreset, customRange?: DateRange): DateRange {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
   switch (preset) {
+    case 'all':
+      return { start: new Date(0), end: endOfToday };
     case 'this-month':
-      return { start: new Date(today.getFullYear(), today.getMonth(), 1), end: today };
+      return { start: new Date(today.getFullYear(), today.getMonth(), 1), end: endOfToday };
     case 'last-month': {
       const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
       const end = new Date(today.getFullYear(), today.getMonth(), 0);
-      return { start, end };
+      return { start, end: new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999) };
     }
     case 'ytd':
-      return { start: new Date(today.getFullYear(), 0, 1), end: today };
+      return { start: new Date(today.getFullYear(), 0, 1), end: endOfToday };
     case 'fy': {
       const currentYear = today.getFullYear();
       const fyStart = today.getMonth() >= 3 ? new Date(currentYear, 3, 1) : new Date(currentYear - 1, 3, 1);
-      return { start: fyStart, end: today };
+      return { start: fyStart, end: endOfToday };
     }
     case 'custom':
-      return customRange || { start: today, end: today };
+      return customRange || { start: today, end: endOfToday };
   }
 }
 
@@ -59,7 +63,7 @@ interface CategoryTotal {
 export default function ProfitLossStatement() {
   const transactions = useStore((state) => state.transactions);
 
-  const [datePreset, setDatePreset] = useState<DatePreset>('this-month');
+  const [datePreset, setDatePreset] = useState<DatePreset>('all');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
 
@@ -122,8 +126,112 @@ export default function ProfitLossStatement() {
       .sort((a, b) => b.amount - a.amount);
   }, [expenseTransactions, totalExpenses]);
 
-  const handlePrint = () => {
-    window.print();
+  const handleExportPDF = () => {
+    import('jspdf').then(({ jsPDF }) => {
+      import('jspdf-autotable').then(({ default: autoTable }) => {
+        const doc = new jsPDF();
+        
+        doc.setFontSize(18);
+        doc.text('Income vs Expense Statement', 14, 20);
+        doc.setFontSize(10);
+        doc.text(`Period: ${formatDate(dateRange.start.toISOString())} to ${formatDate(dateRange.end.toISOString())}`, 14, 28);
+        doc.text(`Generated on: ${new Date().toLocaleDateString('en-IN')}`, 14, 35);
+        
+        let startY = 45;
+        
+        doc.setFontSize(14);
+        doc.setFont('', 'bold');
+        doc.text('Summary', 14, startY);
+        startY += 8;
+        
+        doc.setFontSize(10);
+        doc.setFont('', 'normal');
+        autoTable(doc, {
+          head: [['Metric', 'Amount (₹)']],
+          body: [
+            ['Total Income', formatCurrency(totalIncome)],
+            ['Total Expenses', formatCurrency(totalExpenses)],
+            ['Net Profit / (Loss)', formatCurrency(netProfit)],
+            ['Savings Rate', `${savingsRate}%`],
+          ],
+          startY,
+          theme: 'grid',
+          styles: { fontSize: 9 },
+          headStyles: { fillColor: [79, 70, 229] },
+        });
+        
+        const afterSummary = (doc as any).lastAutoTable.finalY + 15;
+        
+        doc.setFontSize(14);
+        doc.setFont('', 'bold');
+        doc.text('Income Breakdown', 14, afterSummary);
+        
+        doc.setFontSize(10);
+        doc.setFont('', 'normal');
+        autoTable(doc, {
+          head: [['Category', 'Transactions', 'Amount (₹)', 'Percentage']],
+          body: incomeByCategory.map(item => [
+            item.category,
+            item.count.toString(),
+            formatCurrency(item.amount),
+            `${item.percentage}%`,
+          ]),
+          startY: afterSummary + 5,
+          theme: 'grid',
+          styles: { fontSize: 9 },
+          headStyles: { fillColor: [16, 185, 129] },
+        });
+        
+        const afterIncome = (doc as any).lastAutoTable.finalY + 15;
+        
+        doc.setFontSize(14);
+        doc.setFont('', 'bold');
+        doc.text('Expense Breakdown', 14, afterIncome);
+        
+        doc.setFontSize(10);
+        doc.setFont('', 'normal');
+        autoTable(doc, {
+          head: [['Category', 'Transactions', 'Amount (₹)', 'Percentage']],
+          body: expensesByCategory.map(item => [
+            item.category,
+            item.count.toString(),
+            formatCurrency(item.amount),
+            `${item.percentage}%`,
+          ]),
+          startY: afterIncome + 5,
+          theme: 'grid',
+          styles: { fontSize: 9 },
+          headStyles: { fillColor: [239, 68, 68] },
+        });
+        
+        const afterExpenses = (doc as any).lastAutoTable.finalY + 15;
+        
+        doc.setFontSize(14);
+        doc.setFont('', 'bold');
+        doc.text('Transaction Details', 14, afterExpenses);
+        
+        doc.setFontSize(10);
+        doc.setFont('', 'normal');
+        autoTable(doc, {
+          head: [['Date', 'Type', 'Category', 'Description', 'Amount (₹)']],
+          body: filteredTransactions
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            .map(t => [
+              new Date(t.date).toLocaleDateString('en-IN'),
+              t.type === 'income' ? 'Income' : 'Expense',
+              t.category,
+              t.note || '-',
+              formatCurrency(t.amount),
+            ]),
+          startY: afterExpenses + 5,
+          theme: 'grid',
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [100, 116, 139] },
+        });
+        
+        doc.save(`income-expense-${new Date().toISOString().split('T')[0]}.pdf`);
+      });
+    });
   };
 
   const handleExportCSV = () => {
@@ -205,10 +313,10 @@ export default function ProfitLossStatement() {
 
         <div className="flex gap-2 mt-4">
           <button
-            onClick={handlePrint}
+            onClick={handleExportPDF}
             className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition-colors"
           >
-            Print Report
+            Export PDF
           </button>
           <button
             onClick={handleExportCSV}
