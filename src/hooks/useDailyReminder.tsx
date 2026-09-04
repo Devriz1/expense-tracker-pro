@@ -7,15 +7,6 @@ interface DailyReminderOptions {
   testing?: boolean;
 }
 
-function hasTransactionsForDate(transactions: any[], date: Date): boolean {
-  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const end = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
-  return transactions.some((t) => {
-    const txDate = new Date(t.date);
-    return txDate >= start && txDate <= end;
-  });
-}
-
 function getReminderKey(time: string, date: Date): string {
   return `reminder-${time}-${date.toISOString().split('T')[0]}`;
 }
@@ -100,7 +91,6 @@ export function useDailyReminder(transactions: any[], options: DailyReminderOpti
     if (typeof window === 'undefined') return;
 
     const today = new Date();
-    if (hasTransactionsForDate(transactions, today)) return;
 
     const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
