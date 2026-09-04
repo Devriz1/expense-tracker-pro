@@ -32,6 +32,7 @@ export default function App() {
   const { showReminder, dismissReminder } = useDailyReminder(transactions, {
     enabled: dailyReminderEnabled,
     reminderTimes,
+    testing: true,
   });
 
   const {

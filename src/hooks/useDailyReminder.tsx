@@ -4,6 +4,7 @@ import { Bell } from 'lucide-react';
 interface DailyReminderOptions {
   enabled: boolean;
   reminderTimes: string[];
+  testing?: boolean;
 }
 
 function hasTransactionsForDate(transactions: any[], date: Date): boolean {
@@ -55,6 +56,12 @@ function getNextReminderTime(reminderTimes: string[]): Date | null {
   return new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), firstHours, firstMinutes, 0, 0);
 }
 
+function getNextMinuteReminder(intervalMinutes: number): Date {
+  const now = new Date();
+  const next = new Date(now.getTime() + intervalMinutes * 60 * 1000);
+  return new Date(next.getFullYear(), next.getMonth(), next.getDate(), next.getHours(), next.getMinutes(), 0, 0);
+}
+
 export interface TransactionReminder {
   message: string;
   time: string;
@@ -63,7 +70,7 @@ export interface TransactionReminder {
 }
 
 export function useDailyReminder(transactions: any[], options: DailyReminderOptions) {
-  const { enabled, reminderTimes } = options;
+  const { enabled, reminderTimes, testing = false } = options;
   const [showReminder, setShowReminder] = useState<TransactionReminder | null>(null);
   const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
@@ -131,7 +138,7 @@ export function useDailyReminder(transactions: any[], options: DailyReminderOpti
     requestPermission();
 
     const scheduleNextReminder = () => {
-      const nextTime = getNextReminderTime(reminderTimes);
+      const nextTime = testing ? getNextMinuteReminder(1) : getNextReminderTime(reminderTimes);
       if (!nextTime) return;
 
       const now = new Date();
@@ -140,7 +147,7 @@ export function useDailyReminder(transactions: any[], options: DailyReminderOpti
       const timeoutId = setTimeout(() => {
         checkAndNotify();
         scheduleNextReminder();
-      }, delay);
+      }, Math.max(delay, 0));
 
       const key = nextTime.toISOString();
       timersRef.current.set(key, timeoutId);
@@ -168,7 +175,7 @@ export function useDailyReminder(transactions: any[], options: DailyReminderOpti
       timersRef.current.forEach((timer) => clearTimeout(timer));
       timersRef.current.clear();
     };
-  }, [enabled, reminderTimes, checkAndNotify]);
+  }, [enabled, reminderTimes, testing, checkAndNotify]);
 
   return {
     showReminder,
