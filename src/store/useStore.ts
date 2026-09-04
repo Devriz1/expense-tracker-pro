@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Transaction, Filters, BudgetStatus, Summary, CategoryBreakdown, MonthlyTrend } from './types';
 
-const CATEGORIES = {
+const DEFAULT_CATEGORIES = {
   expense: ['Food', 'Rent', 'Utilities', 'Transportation', 'Entertainment', 'Shopping', 'Healthcare', 'Education', 'Other'],
   income: ['Salary', 'Freelance', 'Investment', 'Gift', 'Other'],
 };
@@ -10,15 +10,15 @@ const CATEGORIES = {
 const PAYMENT_METHODS = ['Cash', 'Credit Card', 'Debit Card', 'UPI', 'Bank Transfer', 'Other'];
 
 export const BUDGET_LIMITS = {
-  Food: 15000,
-  Rent: 30000,
-  Utilities: 5000,
-  Transportation: 8000,
-  Entertainment: 5000,
-  Shopping: 10000,
-  Healthcare: 5000,
-  Education: 10000,
-  Other: 5000,
+  Food: 500,
+  Rent: 500,
+  Utilities: 500,
+  Transportation: 500,
+  Entertainment: 500,
+  Shopping: 500,
+  Healthcare: 500,
+  Education: 500,
+  Other: 500,
 };
 
 function generateId() {
@@ -30,17 +30,24 @@ interface StoreState {
   filters: Filters;
   budgetLimits: Record<string, number>;
   totalBudget: number;
+  customCategories: {
+    expense: string[];
+    income: string[];
+  };
   
   setFilters: (filters: Partial<Filters>) => void;
   resetFilters: () => void;
   addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt'>) => void;
-  updateTransaction: (id: string, updates: Partial<Transaction>) => void;
+        updateTransaction: (id: string, updates: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
   clearAllTransactions: () => void;
   seedData: () => void;
   setBudgetLimit: (category: string, limit: number) => void;
   setTotalBudget: (total: number) => void;
   resetBudgetLimits: () => void;
+  addCustomCategory: (type: 'expense' | 'income', category: string) => void;
+  removeCustomCategory: (type: 'expense' | 'income', category: string) => void;
+  getCategories: (type: 'expense' | 'income') => string[];
   getFilteredTransactions: () => Transaction[];
   getSummary: () => Summary;
   getCategoryBreakdown: () => CategoryBreakdown[];
@@ -63,6 +70,7 @@ export const useStore = create<StoreState>()(
       },
       budgetLimits: { ...BUDGET_LIMITS },
       totalBudget: Object.values(BUDGET_LIMITS).reduce((s, l) => s + l, 0),
+      customCategories: { expense: [], income: [] },
 
       setFilters: (newFilters) =>
         set((state) => ({
@@ -98,7 +106,7 @@ export const useStore = create<StoreState>()(
           ),
         })),
 
-      deleteTransaction: (id) =>
+      deleteTransaction: (id: string) =>
         set((state) => ({
           transactions: state.transactions.filter((t) => t.id !== id),
         })),
@@ -114,8 +122,61 @@ export const useStore = create<StoreState>()(
       setTotalBudget: (total) =>
         set({ totalBudget: total }),
 
-      resetBudgetLimits: () =>
-        set({ budgetLimits: { ...BUDGET_LIMITS }, totalBudget: Object.values(BUDGET_LIMITS).reduce((s, l) => s + l, 0) }),
+      addCustomCategory: (type, category) =>
+        set((state) => {
+          const trimmed = category.trim();
+          if (!trimmed) return state;
+          const exists = get().getCategories(type).includes(trimmed);
+          if (exists) return state;
+          return {
+            customCategories: {
+              ...state.customCategories,
+              [type]: [...state.customCategories[type], trimmed],
+            },
+          };
+        }),
+
+      removeCustomCategory: (type, category) =>
+        set((state) => ({
+          customCategories: {
+            ...state.customCategories,
+            [type]: state.customCategories[type].filter((c) => c !== category),
+          },
+        })),
+
+      getCategories: (type) => {
+        const custom = get().customCategories[type] || [];
+        return [...DEFAULT_CATEGORIES[type], ...custom];
+      },
+
+      resetBudgetLimits: () => {
+        const { transactions, getCategories } = get();
+        const totalIncome = transactions
+          .filter((t) => t.type === 'income')
+          .reduce((sum, t) => sum + t.amount, 0);
+        
+        const expenseCategories = getCategories('expense');
+        
+        let newLimits: Record<string, number> = {};
+        
+        if (totalIncome > 0) {
+          const basePerCategory = Math.floor(totalIncome / expenseCategories.length);
+          const remainder = totalIncome % expenseCategories.length;
+          
+          expenseCategories.forEach((cat: string, index: number) => {
+            newLimits[cat] = basePerCategory + (index < remainder ? 1 : 0);
+          });
+        } else {
+          expenseCategories.forEach((cat: string) => {
+            newLimits[cat] = 500;
+          });
+        }
+        
+        set({ 
+          budgetLimits: newLimits, 
+          totalBudget: totalIncome || Object.values(newLimits).reduce((s, l) => s + l, 0)
+        });
+      },
 
       seedData: () => {
         const now = Date.now();
@@ -227,7 +288,7 @@ export const useStore = create<StoreState>()(
           });
 
         return Object.entries(budgetLimits)
-          .filter(([category]) => CATEGORIES.expense.includes(category as any))
+          .filter(([category]) => DEFAULT_CATEGORIES.expense.includes(category as any))
           .map(([category, limit]) => ({
             category,
             limit,
@@ -315,4 +376,4 @@ export const useStore = create<StoreState>()(
   )
 );
 
-export { CATEGORIES, PAYMENT_METHODS };
+export { DEFAULT_CATEGORIES as CATEGORIES, PAYMENT_METHODS };

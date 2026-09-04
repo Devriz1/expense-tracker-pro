@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Search, Filter, Download, FileText, Plus } from 'lucide-react';
-import { useStore, CATEGORIES } from '../store/useStore';
+import { useStore } from '../store/useStore';
 import TransactionItem from './TransactionItem';
 import TransactionForm from './TransactionForm';
 import type { Transaction } from '../store/types';
 
 export default function TransactionList() {
-  const { transactions, filters, setFilters, resetFilters, deleteTransaction, exportToCSV, exportToJSON, exportToPDF } = useStore();
+  const { transactions, filters, setFilters, resetFilters, deleteTransaction, exportToCSV, exportToJSON, exportToPDF, getCategories } = useStore();
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -151,12 +151,12 @@ export default function TransactionList() {
                 {(filters.type === 'income' || filters.type === 'all') && (
                   filters.type === 'all' ? (
                     <optgroup label="Income">
-                      {CATEGORIES.income.map((cat) => (
+                      {getCategories('income').map((cat) => (
                         <option key={cat} value={cat}>{cat}</option>
                       ))}
                     </optgroup>
                   ) : (
-                    CATEGORIES.income.map((cat) => (
+                    getCategories('income').map((cat) => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))
                   )
@@ -166,12 +166,12 @@ export default function TransactionList() {
                 {(filters.type === 'expense' || filters.type === 'all') && (
                   filters.type === 'all' ? (
                     <optgroup label="Expense">
-                      {CATEGORIES.expense.map((cat) => (
+                      {getCategories('expense').map((cat) => (
                         <option key={cat} value={cat}>{cat}</option>
                       ))}
                     </optgroup>
                   ) : (
-                    CATEGORIES.expense.map((cat) => (
+                    getCategories('expense').map((cat) => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))
                   )

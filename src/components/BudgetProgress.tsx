@@ -4,16 +4,25 @@ import { useStore } from '../store/useStore';
 export default function BudgetProgress() {
   const transactions = useStore((state) => state.transactions);
   const budgetLimits = useStore((state) => state.budgetLimits);
-  const totalBudget = useStore((state) => state.totalBudget);
   const setBudgetLimit = useStore((state) => state.setBudgetLimit);
-  const setTotalBudget = useStore((state) => state.setTotalBudget);
   const resetBudgetLimits = useStore((state) => state.resetBudgetLimits);
+  const getCategories = useStore((state) => state.getCategories);
 
   const [editing, setEditing] = useState(false);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
-  const [editingTotal, setEditingTotal] = useState(false);
-  const [totalEditValue, setTotalEditValue] = useState('');
+
+  const expenseCategories = getCategories('expense');
+
+  const totalIncome = useMemo(() => {
+    return transactions
+      .filter((t) => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+  }, [transactions]);
+
+  const totalBudgetFromCategories = useMemo(() => {
+    return Object.values(budgetLimits).reduce((sum, limit) => sum + limit, 0);
+  }, [budgetLimits]);
 
   const budgetStatus = useMemo(() => {
     const spending: Record<string, number> = {};
@@ -23,16 +32,14 @@ export default function BudgetProgress() {
         spending[t.category] = (spending[t.category] || 0) + t.amount;
       });
 
-    return Object.entries(budgetLimits).map(([category, limit]) => ({
+    return expenseCategories.map((category) => ({
       category,
-      limit,
+      limit: budgetLimits[category] || 0,
       spent: spending[category] || 0,
-      percentage: limit > 0 ? Math.min(((spending[category] || 0) / limit) * 100, 100) : 0,
-      overBudget: (spending[category] || 0) > limit,
+      percentage: (budgetLimits[category] || 0) > 0 ? Math.min(((spending[category] || 0) / (budgetLimits[category] || 1)) * 100, 100) : 0,
+      overBudget: (spending[category] || 0) > (budgetLimits[category] || 0),
     }));
-  }, [transactions, budgetLimits]);
-
-  const totalSpent = budgetStatus.reduce((s, item) => s + item.spent, 0);
+  }, [transactions, budgetLimits, expenseCategories]);
 
   const startEdit = (category: string, currentLimit: number) => {
     setEditingCategory(category);
@@ -51,25 +58,6 @@ export default function BudgetProgress() {
   const cancelEdit = () => {
     setEditingCategory(null);
     setEditValue('');
-  };
-
-  const startEditTotal = () => {
-    setTotalEditValue(totalBudget.toString());
-    setEditingTotal(true);
-  };
-
-  const saveTotalEdit = () => {
-    const numValue = parseFloat(totalEditValue);
-    if (!isNaN(numValue) && numValue >= 0) {
-      setTotalBudget(numValue);
-    }
-    setEditingTotal(false);
-    setTotalEditValue('');
-  };
-
-  const cancelTotalEdit = () => {
-    setEditingTotal(false);
-    setTotalEditValue('');
   };
 
   return (
@@ -95,33 +83,18 @@ export default function BudgetProgress() {
       </div>
 
       <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-xl">
-        <span className="text-sm text-gray-600">Total Budget</span>
-        {editingTotal ? (
-          <div className="flex items-center gap-1">
-            <span className="text-sm text-gray-500">₹</span>
-            <input
-              type="number"
-              value={totalEditValue}
-              onChange={(e) => setTotalEditValue(e.target.value)}
-              onBlur={saveTotalEdit}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') saveTotalEdit();
-                if (e.key === 'Escape') cancelTotalEdit();
-              }}
-              autoFocus
-              className="w-28 px-2 py-1 text-sm border border-indigo-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-        ) : (
-          <button
-            onClick={startEditTotal}
-            className={`text-sm font-medium ${editing ? 'text-indigo-600 hover:text-indigo-700' : 'text-gray-900'}`}
-            disabled={!editing}
-            title={editing ? 'Click to edit total budget' : 'Enable edit mode to change total budget'}
-          >
-            ₹{totalSpent.toLocaleString('en-IN')} / ₹{totalBudget.toLocaleString('en-IN')}
-          </button>
-        )}
+        <div className="flex flex-col">
+          <span className="text-sm text-gray-600">Total Budget</span>
+          <span className="text-xs text-gray-400">Sum of all income</span>
+        </div>
+        <div className="text-right">
+          <span className="text-sm font-medium text-gray-900">
+            ₹{totalIncome.toLocaleString('en-IN')}
+          </span>
+          {totalIncome > 0 && (
+            <p className="text-xs text-gray-400">Categories: ₹{totalBudgetFromCategories.toLocaleString('en-IN')}</p>
+          )}
+        </div>
       </div>
 
       {budgetStatus.length === 0 ? (

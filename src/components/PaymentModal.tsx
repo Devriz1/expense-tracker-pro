@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, CheckCircle, AlertCircle } from 'lucide-react';
 import type { UpiPaymentData } from '../utils/upiParser';
-import { CATEGORIES } from '../store/useStore';
+import { useStore } from '../store/useStore';
 import { buildUpiDeepLink, savePendingPayment } from '../services/paymentService';
 
 interface PaymentModalProps {
@@ -11,6 +11,9 @@ interface PaymentModalProps {
 }
 
 export default function PaymentModal({ paymentData, onLaunch, onCancel }: PaymentModalProps) {
+  const getCategories = useStore((state) => state.getCategories);
+  const categories = getCategories('expense');
+
   const [amount, setAmount] = useState(paymentData.amount?.toString() || '');
   const [category, setCategory] = useState('Food');
   const [note, setNote] = useState(paymentData.note || paymentData.merchantName || '');
@@ -91,7 +94,7 @@ export default function PaymentModal({ paymentData, onLaunch, onCancel }: Paymen
               onChange={(e) => setCategory(e.target.value)}
               className="select"
             >
-              {CATEGORIES.expense.map((cat) => (
+              {categories.map((cat) => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>

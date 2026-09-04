@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Plus, Scan, Smartphone } from 'lucide-react';
-import { useStore, CATEGORIES, PAYMENT_METHODS } from '../store/useStore';
+import { useStore, PAYMENT_METHODS } from '../store/useStore';
 import type { Transaction } from '../store/types';
 import ReceiptScanner from './ReceiptScanner';
 import type { ReceiptData } from '../utils/ocr';
@@ -17,6 +17,8 @@ interface TransactionFormProps {
 export default function TransactionForm({ onClose, editTransaction }: TransactionFormProps) {
   const addTransaction = useStore((state) => state.addTransaction);
   const updateTransaction = useStore((state) => state.updateTransaction);
+  const getCategories = useStore((state) => state.getCategories);
+  const addCustomCategory = useStore((state) => state.addCustomCategory);
 
   const [formData, setFormData] = useState({
     type: 'expense' as 'expense' | 'income',
@@ -32,6 +34,10 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
   const [showUpiScanner, setShowUpiScanner] = useState(false);
   const [upiData, setUpiData] = useState<UpiPaymentData | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [showAddCategory, setShowAddCategory] = useState(false);
+
+  const categories = getCategories(formData.type);
 
   const scanReceiptEnabled = useSettingsStore((state) => state.scanReceiptEnabled);
   const payWithUpiEnabled = useSettingsStore((state) => state.payWithUpiEnabled);
@@ -50,12 +56,21 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
   }, [editTransaction]);
 
   const handleTypeChange = (type: 'expense' | 'income') => {
-    const categories = CATEGORIES[type] || [];
+    const cats = getCategories(type);
     setFormData((prev) => ({
       ...prev,
       type,
-      category: categories[0] || prev.category,
+      category: cats[0] || prev.category,
     }));
+  };
+
+  const handleAddCategory = () => {
+    const trimmed = newCategoryName.trim();
+    if (!trimmed) return;
+    addCustomCategory(formData.type, trimmed);
+    setFormData((prev) => ({ ...prev, category: trimmed }));
+    setNewCategoryName('');
+    setShowAddCategory(false);
   };
 
   const handleReceiptScanned = (data: ReceiptData) => {
@@ -166,19 +181,49 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
             {errors.amount && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.amount}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Category</label>
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Category</label>
+            <div className="flex gap-2">
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="select text-sm"
+                className="select text-sm flex-1"
               >
-                {(CATEGORIES[formData.type] || []).map((cat) => (
+                {categories.map((cat) => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
+              <button
+                type="button"
+                onClick={() => setShowAddCategory(!showAddCategory)}
+                className="px-3 py-2 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-colors"
+                title="Add custom category"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
             </div>
+            {showAddCategory && (
+              <div className="flex gap-2 mt-2">
+                <input
+                  type="text"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  className="input text-sm flex-1"
+                  placeholder="New category name"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={handleAddCategory}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm hover:bg-indigo-700 transition-colors"
+                >
+                  Add
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Date</label>
               <input
@@ -189,19 +234,18 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
               />
               {errors.date && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.date}</p>}
             </div>
-          </div>
-
-          <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Payment Method</label>
-            <select
-              value={formData.paymentMethod}
-              onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-              className="select text-sm"
-            >
-              {PAYMENT_METHODS.map((method) => (
-                <option key={method} value={method}>{method}</option>
-              ))}
-            </select>
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Payment Method</label>
+              <select
+                value={formData.paymentMethod}
+                onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                className="select text-sm"
+              >
+                {PAYMENT_METHODS.map((method) => (
+                  <option key={method} value={method}>{method}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div>
