@@ -19,6 +19,7 @@ interface PersonEntry {
   status: EntryStatus;
   settledDate?: string;
   createdAt: number;
+  addedToTransactions?: boolean;
 }
 
 const STORAGE_KEY = 'expense-tracker-people';
@@ -92,6 +93,7 @@ export default function PeopleMoneyModule() {
         ...e,
         status: newStatus,
         settledDate: newStatus === 'settled' ? new Date().toISOString() : undefined,
+        addedToTransactions: newStatus === 'settled' ? true : e.addedToTransactions,
       };
     });
     setEntries(updated);
@@ -117,6 +119,10 @@ export default function PeopleMoneyModule() {
   };
 
   const handleAddAsTransaction = (entry: PersonEntry) => {
+    if (entry.addedToTransactions) {
+      alert('This entry has already been added to transactions.');
+      return;
+    }
     addTransaction({
       type: entry.type === 'lent' ? 'expense' : 'income',
       amount: entry.amount,
@@ -125,6 +131,11 @@ export default function PeopleMoneyModule() {
       date: new Date().toISOString(),
       paymentMethod: 'Other',
     });
+    const updated = entries.map((e) =>
+      e.id === entry.id ? { ...e, addedToTransactions: true } : e
+    );
+    setEntries(updated);
+    saveEntries(updated);
     alert('Added to transactions!');
   };
 
@@ -325,8 +336,13 @@ export default function PeopleMoneyModule() {
                     </button>
                     <button
                       onClick={() => handleAddAsTransaction(entry)}
-                      title="Add to transactions"
-                      className="text-xs p-1 rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+                      title={entry.addedToTransactions ? 'Already added to transactions' : 'Add to transactions'}
+                      disabled={entry.addedToTransactions}
+                      className={`text-xs p-1 rounded ${
+                        entry.addedToTransactions
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+                      }`}
                     >
                       <Plus className="w-3 h-3" />
                     </button>
