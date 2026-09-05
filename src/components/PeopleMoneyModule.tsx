@@ -93,7 +93,6 @@ export default function PeopleMoneyModule() {
         ...e,
         status: newStatus,
         settledDate: newStatus === 'settled' ? new Date().toISOString() : undefined,
-        addedToTransactions: newStatus === 'settled' ? true : e.addedToTransactions,
       };
     });
     setEntries(updated);
