@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, List, BarChart3, Wallet, Plus, Settings, BookOpen } from 'lucide-react';
+import { LayoutDashboard, List, BarChart3, Wallet, Plus, Settings, BookOpen, Users } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import Header from './components/Header';
 import SummaryCards from './components/SummaryCards';
@@ -13,11 +13,12 @@ import InstallPrompt from './components/InstallPrompt';
 import PaymentVerificationPrompt from './components/PaymentVerificationPrompt';
 import AppLock from './components/AppLock';
 import SettingsPage from './components/SettingsPage';
+import PeopleMoneyModule from './components/PeopleMoneyModule';
 import { useStore } from './store/useStore';
 import { useUpiPayment } from './hooks/useUpiPayment';
 import { useSettingsStore } from './store/useSettingsStore';
 
-type Tab = 'dashboard' | 'transactions' | 'analytics' | 'ledger' | 'budget' | 'settings';
+type Tab = 'dashboard' | 'transactions' | 'analytics' | 'ledger' | 'budget' | 'people' | 'settings';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -48,7 +49,7 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
-    if (tab === 'settings' || tab === 'ledger') {
+    if (tab === 'settings' || tab === 'ledger' || tab === 'people') {
       setActiveTab(tab);
     }
   }, []);
@@ -59,6 +60,7 @@ export default function App() {
     { id: 'analytics' as Tab, label: 'Analytics', icon: BarChart3 },
     { id: 'ledger' as Tab, label: 'Ledger', icon: BookOpen },
     { id: 'budget' as Tab, label: 'Budget', icon: Wallet },
+    { id: 'people' as Tab, label: 'Money', icon: Users },
     { id: 'settings' as Tab, label: 'Settings', icon: Settings },
   ];
 
@@ -77,6 +79,7 @@ export default function App() {
                 {activeTab === 'analytics' && 'Analytics & Insights'}
               {activeTab === 'ledger' && 'Ledger'}
               {activeTab === 'budget' && 'Budget Management'}
+              {activeTab === 'people' && 'Money'}
               {activeTab === 'settings' && 'Settings'}
             </h2>
             <p className="text-gray-500 mt-1">
@@ -85,6 +88,7 @@ export default function App() {
               {activeTab === 'analytics' && 'Visualize your spending patterns'}
               {activeTab === 'ledger' && 'Income vs Expense Statement'}
               {activeTab === 'budget' && 'Track your budget limits'}
+              {activeTab === 'people' && 'Track money you lent or borrowed from friends'}
               {activeTab === 'settings' && 'App preferences and backup'}
             </p>
             </div>
@@ -205,6 +209,10 @@ export default function App() {
               <div className="space-y-6">
               <BudgetProgress />
             </div>
+          )}
+
+          {activeTab === 'people' && (
+            <PeopleMoneyModule />
           )}
 
           {activeTab === 'settings' && (
