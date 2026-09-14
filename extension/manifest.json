@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Auto Backup Downloader",
+  "version": "1.0.0",
+  "description": "Download backup files into a specific subfolder inside your Downloads directory without prompting.",
+  "permissions": ["downloads", "storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Auto Backup Downloader"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}

@@ -7,6 +7,7 @@ import TransactionList from './components/TransactionList';
 import TransactionForm from './components/TransactionForm';
 import AnalyticsCharts from './components/AnalyticsCharts';
 import BudgetProgress from './components/BudgetProgress';
+import WalletBalanceCards from './components/WalletBalanceCards';
 import ProfitLossStatement from './components/ProfitLossStatement';
 import EmptyState from './components/EmptyState';
 import InstallPrompt from './components/InstallPrompt';
@@ -17,6 +18,7 @@ import PeopleMoneyModule from './components/PeopleMoneyModule';
 import { useStore } from './store/useStore';
 import { useUpiPayment } from './hooks/useUpiPayment';
 import { useSettingsStore } from './store/useSettingsStore';
+import { runBackup, shouldRunAutoBackup } from './services/backupService';
 
 type Tab = 'dashboard' | 'transactions' | 'analytics' | 'ledger' | 'budget' | 'people' | 'settings';
 
@@ -53,6 +55,50 @@ export default function App() {
       setActiveTab(tab);
     }
   }, []);
+
+  const backup = useSettingsStore((state) => state.backup);
+  const setLastBackupAt = useSettingsStore((state) => state.setLastBackupAt);
+
+  useEffect(() => {
+    if (!backup.autoBackupEnabled) return;
+
+    const triggerBackup = () => {
+      if (!backup.folderUri && !backup.folderName) return;
+      if (!shouldRunAutoBackup(backup.backupFrequency, backup.lastBackupAt)) return;
+
+      runBackup(backup.format)
+        .then(() => setLastBackupAt(new Date().toISOString()))
+        .catch((err) => console.error('Scheduled backup failed', err));
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        triggerBackup();
+      }
+      if (document.visibilityState === 'visible') {
+        triggerBackup();
+      }
+    };
+
+    const handlePageHide = () => {
+      triggerBackup();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handlePageHide);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handlePageHide);
+    };
+  }, [
+    backup.autoBackupEnabled,
+    backup.folderUri,
+    backup.folderName,
+    backup.backupFrequency,
+    backup.lastBackupAt,
+    backup.format,
+    setLastBackupAt,
+  ]);
 
   const tabs = [
     { id: 'dashboard' as Tab, label: 'Dashboard', icon: LayoutDashboard },
@@ -122,6 +168,7 @@ export default function App() {
             {activeTab === 'dashboard' && (
               <div className="space-y-6">
                 <SummaryCards summary={summary} />
+                <WalletBalanceCards />
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="card">
@@ -205,8 +252,8 @@ export default function App() {
               <ProfitLossStatement />
             )}
 
-            {activeTab === 'budget' && (
-              <div className="space-y-6">
+          {activeTab === 'budget' && (
+            <div className="space-y-6">
               <BudgetProgress />
             </div>
           )}

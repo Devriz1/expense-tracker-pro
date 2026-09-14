@@ -156,20 +156,7 @@ export default function ReceiptScanner({ onScanComplete, onClose }: ReceiptScann
                         />
                       </div>
                     )}
-                    {result.date !== undefined && (
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">Date</label>
-                        <input
-                          type="text"
-                          value={result.date}
-                          onChange={(e) =>
-                            setResult((prev) => prev ? { ...prev, date: e.target.value } : prev)
-                          }
-                          className="input"
-                        />
-                      </div>
-                    )}
-                    {result.amount === undefined && result.vendor === undefined && result.date === undefined && (
+                    {result.amount === undefined && result.vendor === undefined && (
                       <p className="text-sm text-gray-500">No details could be extracted. Please enter manually below.</p>
                     )}
                   </div>
@@ -184,15 +171,6 @@ export default function ReceiptScanner({ onScanComplete, onClose }: ReceiptScann
 
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">{error}</div>
-          )}
-
-          {result?.rawText && (
-            <details className="text-xs">
-              <summary className="cursor-pointer text-gray-500 hover:text-gray-700">Raw OCR Text</summary>
-              <pre className="mt-2 p-3 bg-gray-50 rounded-lg text-gray-600 whitespace-pre-wrap max-h-40 overflow-y-auto">
-                {result.rawText}
-              </pre>
-            </details>
           )}
         </div>
       </div>

@@ -2,9 +2,7 @@ import { createWorker } from 'tesseract.js';
 
 export interface ReceiptData {
   amount?: number;
-  date?: string;
   vendor?: string;
-  rawText: string;
 }
 
 export async function extractReceiptData(imageFile: File): Promise<ReceiptData> {
@@ -18,14 +16,11 @@ export async function extractReceiptData(imageFile: File): Promise<ReceiptData> 
     await worker.terminate();
 
     const amount = extractAmount(text);
-    const date = extractDate(text);
     const vendor = extractVendor(text);
 
     return {
       amount,
-      date,
       vendor,
-      rawText: text,
     };
   } catch (err) {
     try {
@@ -40,8 +35,8 @@ export async function extractReceiptData(imageFile: File): Promise<ReceiptData> 
 export function extractAmount(text: string): number | undefined {
   const cleanText = text.replace(/,/g, '');
   const patterns = [
-    /(?:total|amount|grand\s*total|balance|sum|₹\s*|rs\.?|inr)\s*[:\-]?\s*(?:₹\s*)?(\d+(?:\.\d{1,2})?)/i,
-    /₹\s*(\d+(?:\.\d{1,2})?)/,
+    /(?:total|grand\s*total|net\s*total|balance\s*due|amount\s*due|total\s*due)\s*[:\-]?\s*(?:₹\s*)?(\d+(?:\.\d{1,2})?)/i,
+    /(?:₹\s*|rs\.?|inr)\s*(\d+(?:\.\d{1,2})?)/,
     /(\d+(?:\.\d{2}))/,
   ];
 
@@ -60,24 +55,6 @@ export function extractAmount(text: string): number | undefined {
   return bestMatch;
 }
 
-export function extractDate(text: string): string | undefined {
-  const patterns = [
-    /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/,
-    /(\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2})/,
-    /(\d{1,2}(?:st|nd|rd|th)?\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s,]*\d{2,4})/i,
-    /((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s,]*\d{1,2}(?:st|nd|rd|th)?[\s,]*\d{2,4})/i,
-  ];
-
-  for (const pattern of patterns) {
-    const matches = text.match(new RegExp(pattern.source, pattern.flags));
-    if (matches && matches[1]) {
-      return matches[1];
-    }
-  }
-
-  return undefined;
-}
-
 export function extractVendor(text: string): string | undefined {
   const lines = text
     .split('\n')
@@ -87,7 +64,7 @@ export function extractVendor(text: string): string | undefined {
   const skipPatterns = [
     /^\d+$/,
     /^[\/\-\*\.]+$/,
-    /^(tel|phone|fax|email|www|http|address|gst|tax|invoice|receipt|cashier|order|table|bill)/i,
+    /^(tel|phone|fax|email|www|http|address|gst|tax|invoice|receipt|cashier|order|table|bill|welcome|customer|copy|thank|visit|www)/i,
   ];
 
   for (const line of lines.slice(0, 10)) {

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      width: 300px;
+      padding: 16px;
+      font-family: system-ui, sans-serif;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+      color: #555;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      margin-bottom: 12px;
+    }
+    button {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 8px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .save-btn {
+      background: #4f46e5;
+      color: white;
+    }
+    .backup-btn {
+      background: #10b981;
+      color: white;
+    }
+    .status {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #555;
+    }
+    .error {
+      color: #ef4444;
+    }
+    .success {
+      color: #10b981;
+    }
+  </style>
+</head>
+<body>
+  <label for="subfolder">Subfolder Name:</label>
+  <input type="text" id="subfolder" placeholder="e.g., MEGA downloads" />
+
+  <button class="save-btn" id="save">Save Folder</button>
+  <button class="backup-btn" id="backup">Backup Now</button>
+
+  <div class="status" id="status"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

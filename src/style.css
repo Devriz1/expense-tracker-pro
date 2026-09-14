@@ -23,6 +23,26 @@
     @apply bg-light text-dark antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
+
+  /* Hide scrollbars globally */
+  html {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Also hide scrollbars on scrollable containers */
+  * {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .card {
@@ -271,19 +291,6 @@
   border-color: #818cf8;
 }
 
-.toggle-track {
-  background-color: #e2e8f0;
-}
-
-.toggle-track.active {
-  background-color: #4f46e5;
-}
-
-.toggle-thumb {
-  background-color: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
 .dark .toggle-track {
   background-color: #475569;
 }
@@ -294,75 +301,4 @@
 
 .dark .toggle-thumb {
   background-color: #f1f5f9;
-}
-
-.dark .card {
-  background-color: #1e293b;
-  border-color: #334155;
-  color: #f1f5f9;
-}
-
-.dark .card * {
-  color: inherit;
-}
-
-.dark input,
-.dark textarea,
-.dark select {
-  background-color: #1e293b;
-  border-color: #334155;
-  color: #f1f5f9;
-}
-
-.dark input::placeholder,
-.dark textarea::placeholder {
-  color: #64748b;
-}
-
-.dark button {
-  color: inherit;
-}
-
-.dark .btn-primary {
-  background-color: #4f46e5;
-  color: white;
-}
-
-.dark .btn-ghost {
-  color: #94a3b8;
-}
-
-.dark .btn-ghost:hover {
-  background-color: #334155;
-  color: #f1f5f9;
-}
-
-.dark .badge-success {
-  background-color: #064e3b;
-  color: #6ee7b7;
-}
-
-.dark .badge-danger {
-  background-color: #7f1d1d;
-  color: #fca5a5;
-}
-
-.dark [class*="border"] {
-  border-color: #334155;
-}
-
-.dark [class*="ring"] {
-  --tw-ring-color: #475569;
-}
-
-.dark input:focus,
-.dark textarea:focus,
-.dark select:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-}
-
-.dark .scrollbar-hide {
-  scrollbar-width: thin;
-  scrollbar-color: #475569 transparent;
 }

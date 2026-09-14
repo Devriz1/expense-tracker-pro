@@ -27,6 +27,7 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
     note: '',
     date: new Date().toISOString().split('T')[0],
     paymentMethod: 'UPI',
+    walletId: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -36,6 +37,9 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showAddCategory, setShowAddCategory] = useState(false);
+
+  const wallets = useStore((state) => state.wallets);
+  const activeWallets = wallets.filter((w) => w.isActive);
 
   const categories = getCategories(formData.type);
 
@@ -51,6 +55,7 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
         note: editTransaction.note || '',
         date: editTransaction.date.split('T')[0],
         paymentMethod: editTransaction.paymentMethod || 'UPI',
+        walletId: editTransaction.walletId || '',
       });
     }
   }, [editTransaction]);
@@ -79,9 +84,6 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
     }
     if (data.vendor) {
       setFormData((prev) => ({ ...prev, note: data.vendor || prev.note }));
-    }
-    if (data.date) {
-      setFormData((prev) => ({ ...prev, date: data.date || prev.date }));
     }
   };
 
@@ -119,6 +121,7 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
       note: formData.note,
       date: new Date(formData.date).toISOString(),
       paymentMethod: formData.paymentMethod,
+      walletId: formData.walletId || undefined,
     };
 
     if (editTransaction) {
@@ -246,6 +249,22 @@ export default function TransactionForm({ onClose, editTransaction }: Transactio
                 ))}
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Wallet / Account</label>
+            <select
+              value={formData.walletId}
+              onChange={(e) => setFormData({ ...formData, walletId: e.target.value })}
+              className="select text-sm"
+            >
+              <option value="">Select Wallet (Optional)</option>
+              {activeWallets.map((wallet) => (
+                <option key={wallet.id} value={wallet.id}>
+                  {wallet.name} ({wallet.type}) - ₹{wallet.balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

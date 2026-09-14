@@ -6,6 +6,7 @@ export interface Transaction {
   note: string;
   date: string;
   paymentMethod: string;
+  walletId?: string;
   createdAt: number;
   updatedAt?: number;
   paymentStatus?: 'pending' | 'completed' | 'failed';
@@ -48,4 +49,17 @@ export interface CategoryTotal {
   amount: number;
   count: number;
   percentage: string;
+}
+
+export interface Wallet {
+  id: string;
+  name: string;
+  type: 'bank' | 'cash' | 'card' | 'upi' | 'other';
+  bankName?: string;
+  balance: number;
+  color?: string;
+  icon?: string;
+  isActive: boolean;
+  createdAt: number;
+  updatedAt?: number;
 }

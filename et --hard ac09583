@@ -1,0 +1,47 @@
+[33mac09583[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mrollback-ac09583[m[33m)[m HEAD@{0}: checkout: moving from main to rollback-ac09583
+[33mf5dfe6c[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m HEAD@{1}: commit: a
+[33mac09583[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mrollback-ac09583[m[33m)[m HEAD@{2}: reset: moving to HEAD~5
+[33ma22974d[m HEAD@{3}: commit: updated
+[33m8686253[m HEAD@{4}: commit: updated
+[33m3a66c78[m HEAD@{5}: commit: data recovery of old users from localstorage to indexeddb
+[33m55e85b7[m HEAD@{6}: commit: sync issue solved
+[33mcf027c4[m HEAD@{7}: commit: sync updated
+[33mac09583[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mrollback-ac09583[m[33m)[m HEAD@{8}: commit: transaction duplication find
+[33m0fd2675[m HEAD@{9}: commit: recipt and payments added
+[33mbf1be3d[m HEAD@{10}: commit: dropbox updated
+[33m1e31f99[m HEAD@{11}: commit: drop box update
+[33m08d7d00[m HEAD@{12}: commit: updated
+[33md7ea735[m HEAD@{13}: commit: test
+[33m54c54ed[m HEAD@{14}: commit: notification testing
+[33m804002e[m HEAD@{15}: commit: enable notification added
+[33mb94592d[m HEAD@{16}: commit: ledger update
+[33m1fc8b62[m HEAD@{17}: commit: ledger added
+[33m2fb09fb[m HEAD@{18}: commit: adding categories
+[33m91efc34[m HEAD@{19}: commit: auth
+[33m932ca6e[m HEAD@{20}: commit: vercel analytics connected
+[33mce47f8f[m HEAD@{21}: commit: dropbox added
+[33m33b0b0d[m HEAD@{22}: commit: offline sync updated
+[33m56e1140[m HEAD@{23}: commit: editable budget
+[33m31a07b8[m HEAD@{24}: commit: salary change to food
+[33m6e132a8[m HEAD@{25}: commit: settings added
+[33m575aa1f[m HEAD@{26}: commit: updated the camera to main
+[33mcf9894e[m HEAD@{27}: commit: upi scanning
+[33m5ae73b4[m HEAD@{28}: commit: fixed ui
+[33m5284a04[m HEAD@{29}: commit: scanning updated
+[33ma392307[m HEAD@{30}: commit: a
+[33m8f828aa[m HEAD@{31}: commit: a
+[33mcf49243[m HEAD@{32}: commit: a
+[33m4d08dfe[m HEAD@{33}: commit: a
+[33m8badee4[m HEAD@{34}: commit: update in biometric
+[33m15f26c5[m HEAD@{35}: commit: biometric lock updated
+[33mad8afb5[m HEAD@{36}: commit: updated the chart outline to none
+[33md8d1291[m HEAD@{37}: commit: the 3 dot update in small devices
+[33m2239009[m HEAD@{38}: commit: icon overlap updated
+[33mfc3ace9[m HEAD@{39}: commit: dashboard updated
+[33mb651ebc[m HEAD@{40}: commit: install button added onscreen
+[33ma111822[m HEAD@{41}: commit: icon change
+[33mea573c6[m HEAD@{42}: commit: logo change in app
+[33m947c7cd[m HEAD@{43}: commit: Fix Vite dependency compatibility
+[33meb23822[m HEAD@{44}: pull origin main --allow-unrelated-histories: Merge made by the 'ort' strategy.
+[33mdad733d[m HEAD@{45}: Branch: renamed refs/heads/master to refs/heads/main
+[33mdad733d[m HEAD@{47}: commit (initial): initial git

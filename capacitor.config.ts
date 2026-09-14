@@ -18,6 +18,9 @@ const config: CapacitorConfig = {
     LocalNotification: {
       smallIcon: 'ic_stat_notify',
       iconColor: '#4f46e5'
+    },
+    Filesystem: {
+      directories: ['EXTERNAL']
     }
   }
 };

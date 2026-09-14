@@ -1,6 +1,15 @@
 import { Edit2, Trash2, MoreVertical } from 'lucide-react';
 import { useState } from 'react';
-import type { Transaction } from '../store/types';
+import { useStore } from '../store/useStore';
+import type { Transaction, Wallet } from '../store/types';
+
+const walletColors: Record<Wallet['type'], { bg: string; icon: string; text: string }> = {
+  bank: { bg: 'bg-blue-50', icon: 'text-blue-600', text: 'text-blue-700' },
+  cash: { bg: 'bg-amber-50', icon: 'text-amber-600', text: 'text-amber-700' },
+  card: { bg: 'bg-purple-50', icon: 'text-purple-600', text: 'text-purple-700' },
+  upi: { bg: 'bg-green-50', icon: 'text-green-600', text: 'text-green-700' },
+  other: { bg: 'bg-gray-50', icon: 'text-gray-600', text: 'text-gray-700' },
+};
 
 interface TransactionItemProps {
   transaction: Transaction;
@@ -10,6 +19,8 @@ interface TransactionItemProps {
 
 export default function TransactionItem({ transaction, onEdit, onDelete }: TransactionItemProps) {
   const [showActions, setShowActions] = useState(false);
+  const wallets = useStore((state) => state.wallets);
+  const wallet = transaction.walletId ? wallets.find((w) => w.id === transaction.walletId) : null;
 
   const categoryIcons: Record<string, string> = {
     Food: '🍔',
@@ -42,6 +53,17 @@ export default function TransactionItem({ transaction, onEdit, onDelete }: Trans
           <span>{new Date(transaction.date).toLocaleDateString('en-IN')}</span>
           <span>•</span>
           <span>{transaction.paymentMethod}</span>
+          {wallet && (
+            <>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <span className={`inline-flex items-center justify-center w-4 h-4 rounded ${walletColors[wallet.type].bg}`}>
+                  <span className={`text-[10px] ${walletColors[wallet.type].icon}`}>{(wallet.name || 'W').charAt(0)}</span>
+                </span>
+                <span className="text-gray-500 truncate max-w-[100px]">{wallet.name}</span>
+              </span>
+            </>
+          )}
         </div>
       </div>
 

@@ -2,6 +2,19 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Transaction, Filters, BudgetStatus, Summary, CategoryBreakdown, MonthlyTrend } from './types';
 
+export interface Wallet {
+  id: string;
+  name: string;
+  type: 'bank' | 'cash' | 'card' | 'upi' | 'other';
+  bankName?: string;
+  balance: number;
+  color?: string;
+  icon?: string;
+  isActive: boolean;
+  createdAt: number;
+  updatedAt?: number;
+}
+
 const DEFAULT_CATEGORIES = {
   expense: ['Food', 'Rent', 'Utilities', 'Transportation', 'Entertainment', 'Shopping', 'Healthcare', 'Education', 'Other'],
   income: ['Salary', 'Freelance', 'Investment', 'Gift', 'Other'],
@@ -29,16 +42,16 @@ interface StoreState {
   transactions: Transaction[];
   filters: Filters;
   budgetLimits: Record<string, number>;
-  totalBudget: number;
   customCategories: {
     expense: string[];
     income: string[];
   };
+  wallets: Wallet[];
   
   setFilters: (filters: Partial<Filters>) => void;
   resetFilters: () => void;
   addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt'>) => void;
-        updateTransaction: (id: string, updates: Partial<Transaction>) => void;
+  updateTransaction: (id: string, updates: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
   clearAllTransactions: () => void;
   seedData: () => void;
@@ -56,6 +69,12 @@ interface StoreState {
   exportToCSV: () => void;
   exportToJSON: () => void;
   exportToPDF: () => void;
+  
+  // Wallet methods
+  addWallet: (wallet: Omit<Wallet, 'id'>) => void;
+  updateWallet: (id: string, updates: Partial<Wallet>) => void;
+  deleteWallet: (id: string) => void;
+  getTotalBalance: () => { total: number; cash: number; bank: number };
 }
 
 export const useStore = create<StoreState>()(
@@ -69,8 +88,8 @@ export const useStore = create<StoreState>()(
         category: 'all',
       },
       budgetLimits: { ...BUDGET_LIMITS },
-      totalBudget: Object.values(BUDGET_LIMITS).reduce((s, l) => s + l, 0),
       customCategories: { expense: [], income: [] },
+      wallets: [],
 
       setFilters: (newFilters) =>
         set((state) => ({
@@ -88,31 +107,94 @@ export const useStore = create<StoreState>()(
         }),
 
       addTransaction: (transaction) =>
-        set((state) => ({
-          transactions: [
-            {
-              ...transaction,
-              id: generateId(),
-              createdAt: Date.now(),
-            },
-            ...state.transactions,
-          ],
-        })),
+        set((state) => {
+          const newTransaction = {
+            ...transaction,
+            id: generateId(),
+            createdAt: Date.now(),
+          };
+          // Update wallet balance if walletId is provided
+          let newWallets = state.wallets;
+          if (newTransaction.walletId) {
+            newWallets = state.wallets.map((w) => {
+              if (w.id === newTransaction.walletId) {
+                const amountChange = newTransaction.type === 'income' ? newTransaction.amount : -newTransaction.amount;
+                return { ...w, balance: w.balance + amountChange, updatedAt: Date.now() };
+              }
+              return w;
+            });
+          }
+          return {
+            transactions: [newTransaction, ...state.transactions],
+            wallets: newWallets,
+          };
+        }),
 
       updateTransaction: (id, updates) =>
-        set((state) => ({
-          transactions: state.transactions.map((t) =>
+        set((state) => {
+          const oldTransaction = state.transactions.find((t) => t.id === id);
+          const newTransactions = state.transactions.map((t) =>
             t.id === id ? { ...t, ...updates, updatedAt: Date.now() } : t
-          ),
-        })),
+          );
+          
+          // Update wallet balance if walletId changed or amount/type changed
+          let newWallets = state.wallets;
+          const newTransaction = newTransactions.find((t) => t.id === id);
+          
+          if (oldTransaction && newTransaction) {
+            // Remove effect of old transaction
+            if (oldTransaction.walletId) {
+              const oldAmountChange = oldTransaction.type === 'income' ? oldTransaction.amount : -oldTransaction.amount;
+              newWallets = newWallets.map((w) => {
+                if (w.id === oldTransaction.walletId) {
+                  return { ...w, balance: w.balance - oldAmountChange, updatedAt: Date.now() };
+                }
+                return w;
+              });
+            }
+            
+            // Apply effect of new transaction
+            if (newTransaction.walletId) {
+              const newAmountChange = newTransaction.type === 'income' ? newTransaction.amount : -newTransaction.amount;
+              newWallets = newWallets.map((w) => {
+                if (w.id === newTransaction.walletId) {
+                  return { ...w, balance: w.balance + newAmountChange, updatedAt: Date.now() };
+                }
+                return w;
+              });
+            }
+          }
+          
+          return {
+            transactions: newTransactions,
+            wallets: newWallets,
+          };
+        }),
 
       deleteTransaction: (id: string) =>
-        set((state) => ({
-          transactions: state.transactions.filter((t) => t.id !== id),
-        })),
+        set((state) => {
+          const transactionToDelete = state.transactions.find((t) => t.id === id);
+          
+          // Update wallet balance when deleting a transaction
+          let newWallets = state.wallets;
+          if (transactionToDelete?.walletId) {
+            const amountChange = transactionToDelete.type === 'income' ? -transactionToDelete.amount : transactionToDelete.amount;
+            newWallets = state.wallets.map((w) => {
+              if (w.id === transactionToDelete.walletId) {
+                return { ...w, balance: w.balance + amountChange, updatedAt: Date.now() };
+              }
+              return w;
+            });
+          }
+          
+          return {
+            transactions: state.transactions.filter((t) => t.id !== id),
+            wallets: newWallets,
+          };
+        }),
 
       clearAllTransactions: () =>
-        set({ transactions: [] }),
+        set({ transactions: [], wallets: [] }),
 
       setBudgetLimit: (category, limit) =>
         set((state) => ({
@@ -120,7 +202,15 @@ export const useStore = create<StoreState>()(
         })),
 
       setTotalBudget: (total) =>
-        set({ totalBudget: total }),
+        set(() => {
+          const expenseCategories = DEFAULT_CATEGORIES.expense;
+          const perCategory = total / expenseCategories.length;
+          const newLimits: Record<string, number> = {};
+          expenseCategories.forEach((cat: string) => {
+            newLimits[cat] = perCategory;
+          });
+          return { budgetLimits: newLimits };
+        }),
 
       addCustomCategory: (type, category) =>
         set((state) => {
@@ -149,33 +239,42 @@ export const useStore = create<StoreState>()(
         return [...DEFAULT_CATEGORIES[type], ...custom];
       },
 
-      resetBudgetLimits: () => {
-        const { transactions, getCategories } = get();
-        const totalIncome = transactions
-          .filter((t) => t.type === 'income')
-          .reduce((sum, t) => sum + t.amount, 0);
-        
-        const expenseCategories = getCategories('expense');
-        
-        let newLimits: Record<string, number> = {};
-        
-        if (totalIncome > 0) {
-          const basePerCategory = Math.floor(totalIncome / expenseCategories.length);
-          const remainder = totalIncome % expenseCategories.length;
-          
-          expenseCategories.forEach((cat: string, index: number) => {
-            newLimits[cat] = basePerCategory + (index < remainder ? 1 : 0);
-          });
-        } else {
-          expenseCategories.forEach((cat: string) => {
-            newLimits[cat] = 500;
-          });
-        }
-        
-        set({ 
-          budgetLimits: newLimits, 
-          totalBudget: totalIncome || Object.values(newLimits).reduce((s, l) => s + l, 0)
-        });
+      resetBudgetLimits: () =>
+        set({ budgetLimits: { ...BUDGET_LIMITS } }),
+
+      addWallet: (wallet) =>
+        set((state) => ({
+          wallets: [
+            ...state.wallets,
+            {
+              ...wallet,
+              id: generateId(),
+              createdAt: Date.now(),
+              isActive: true,
+            },
+          ],
+        })),
+
+      updateWallet: (id, updates) =>
+        set((state) => ({
+          wallets: state.wallets.map((w) =>
+            w.id === id ? { ...w, ...updates, updatedAt: Date.now() } : w
+          ),
+        })),
+
+      deleteWallet: (id) =>
+        set((state) => ({
+          wallets: state.wallets.filter((w) => w.id !== id),
+        })),
+
+      getTotalBalance: () => {
+        const { wallets } = get();
+        const activeWallets = wallets.filter((w) => w.isActive);
+        const spendableWallets = activeWallets.filter((w) => w.type !== 'other');
+        const total = spendableWallets.reduce((sum, w) => sum + w.balance, 0);
+        const cash = activeWallets.filter((w) => w.type === 'cash').reduce((sum, w) => sum + w.balance, 0);
+        const bank = activeWallets.filter((w) => w.type === 'bank').reduce((sum, w) => sum + w.balance, 0);
+        return { total, cash, bank };
       },
 
       seedData: () => {
@@ -287,9 +386,7 @@ export const useStore = create<StoreState>()(
             monthlySpending[t.category] = (monthlySpending[t.category] || 0) + t.amount;
           });
 
-        return Object.entries(budgetLimits)
-          .filter(([category]) => DEFAULT_CATEGORIES.expense.includes(category as any))
-          .map(([category, limit]) => ({
+        return Object.entries(budgetLimits).map(([category, limit]) => ({
             category,
             limit,
             spent: monthlySpending[category] || 0,
@@ -370,7 +467,7 @@ export const useStore = create<StoreState>()(
       partialize: (state) => ({
         transactions: state.transactions,
         budgetLimits: state.budgetLimits,
-        totalBudget: state.totalBudget,
+        wallets: state.wallets,
       }),
     }
   )

@@ -1,6 +1,6 @@
 // Receipts & Payments Module
-// Track money lent to friends, borrowed from friends, and shared expenses
-// Single unified module for personal lending/borrowing
+// Track money lent to / borrowed from friends
+// Settling a lent entry = income, settling a borrowed entry = expense
 
 import { useState, useMemo } from 'react';
 import { ArrowUpRight, ArrowDownLeft, Plus, X, Trash2, Users, FileText, CheckCircle2, Clock } from 'lucide-react';
@@ -19,7 +19,6 @@ interface PersonEntry {
   status: EntryStatus;
   settledDate?: string;
   createdAt: number;
-  addedToTransactions?: boolean;
 }
 
 const STORAGE_KEY = 'expense-tracker-people';
@@ -41,7 +40,6 @@ export default function PeopleMoneyModule() {
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState<'all' | EntryType | EntryStatus>('all');
   const [search, setSearch] = useState('');
-
   const addTransaction = useStore((state) => state.addTransaction);
 
   const [form, setForm] = useState({
@@ -75,40 +73,32 @@ export default function PeopleMoneyModule() {
   };
 
   const toggleSettled = (id: string) => {
-    const target = entries.find((e) => e.id === id);
-    if (!target) return;
+    const entry = entries.find((e) => e.id === id);
+    if (!entry) return;
+    const newStatus: EntryStatus = entry.status === 'pending' ? 'settled' : 'pending';
 
-    if (target.status === 'pending') {
-      const isSettlingBorrowed = target.type === 'borrowed';
-      const confirmMessage = isSettlingBorrowed
-        ? `Mark as settled? This will record ₹${target.amount} as expense (you paid back).`
-        : `Mark as settled? This will record ₹${target.amount} as income (friend paid you back).`;
-      if (!confirm(confirmMessage)) return;
+    if (newStatus === 'settled') {
+      addTransaction({
+        type: entry.type === 'lent' ? 'income' : 'expense',
+        amount: entry.amount,
+        category: 'Other',
+        note: `${entry.type === 'lent' ? 'Received back from' : 'Paid back to'} ${entry.personName}${entry.note ? ` — ${entry.note}` : ''}`,
+        date: new Date().toISOString(),
+        paymentMethod: 'Other',
+      });
+      alert(`Transaction added: ${entry.type === 'lent' ? '+' : '-'}₹${entry.amount.toLocaleString('en-IN')}`);
     }
 
     const updated = entries.map((e) => {
       if (e.id !== id) return e;
-      const newStatus: EntryStatus = e.status === 'pending' ? 'settled' : 'pending';
       return {
         ...e,
         status: newStatus,
         settledDate: newStatus === 'settled' ? new Date().toISOString() : undefined,
-        addedToTransactions: newStatus === 'settled' ? true : e.addedToTransactions,
       };
     });
     setEntries(updated);
     saveEntries(updated);
-
-    if (target.status === 'pending') {
-      addTransaction({
-        type: target.type === 'lent' ? 'income' : 'expense',
-        amount: target.amount,
-        category: 'Other',
-        note: `Settled: ${target.type === 'lent' ? `${target.personName} paid back` : `Paid back to ${target.personName}`}${target.note ? ` — ${target.note}` : ''}`,
-        date: new Date().toISOString(),
-        paymentMethod: 'Other',
-      });
-    }
   };
 
   const handleDelete = (id: string) => {
@@ -119,10 +109,6 @@ export default function PeopleMoneyModule() {
   };
 
   const handleAddAsTransaction = (entry: PersonEntry) => {
-    if (entry.addedToTransactions) {
-      alert('This entry has already been added to transactions.');
-      return;
-    }
     addTransaction({
       type: entry.type === 'lent' ? 'expense' : 'income',
       amount: entry.amount,
@@ -131,15 +117,9 @@ export default function PeopleMoneyModule() {
       date: new Date().toISOString(),
       paymentMethod: 'Other',
     });
-    const updated = entries.map((e) =>
-      e.id === entry.id ? { ...e, addedToTransactions: true } : e
-    );
-    setEntries(updated);
-    saveEntries(updated);
     alert('Added to transactions!');
   };
 
-  // Group by person to compute net balance per person
   const personBalances = useMemo(() => {
     const map: Record<string, { name: string; net: number; count: number; pending: number }> = {};
     entries.forEach((e) => {
@@ -147,8 +127,6 @@ export default function PeopleMoneyModule() {
       if (!map[e.personName]) {
         map[e.personName] = { name: e.personName, net: 0, count: 0, pending: 0 };
       }
-      // lent = friend owes me (positive to me)
-      // borrowed = I owe friend (negative to me)
       map[e.personName].net += e.type === 'lent' ? e.amount : -e.amount;
       map[e.personName].count += 1;
       map[e.personName].pending += 1;
@@ -186,7 +164,6 @@ export default function PeopleMoneyModule() {
           </button>
         </div>
 
-        {/* Summary Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
           <div className="p-4 bg-emerald-50 rounded-xl">
             <p className="text-xs text-emerald-700 flex items-center gap-1">
@@ -214,7 +191,6 @@ export default function PeopleMoneyModule() {
           </div>
         </div>
 
-        {/* People Balances */}
         {personBalances.length > 0 && (
           <div className="mb-4">
             <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
@@ -243,7 +219,6 @@ export default function PeopleMoneyModule() {
           </div>
         )}
 
-        {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-2 mb-3">
           <input
             type="text"
@@ -267,7 +242,6 @@ export default function PeopleMoneyModule() {
           </div>
         </div>
 
-        {/* Entries List */}
         {filtered.length === 0 ? (
           <div className="text-center py-12">
             <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -336,13 +310,8 @@ export default function PeopleMoneyModule() {
                     </button>
                     <button
                       onClick={() => handleAddAsTransaction(entry)}
-                      title={entry.addedToTransactions ? 'Already added to transactions' : 'Add to transactions'}
-                      disabled={entry.addedToTransactions}
-                      className={`text-xs p-1 rounded ${
-                        entry.addedToTransactions
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
-                      }`}
+                      title="Add to transactions"
+                      className="text-xs p-1 rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
                     >
                       <Plus className="w-3 h-3" />
                     </button>
